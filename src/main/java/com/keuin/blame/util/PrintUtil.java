@@ -1,0 +1,140 @@
+package com.keuin.blame.util;
+
+import com.mojang.brigadier.context.CommandContext;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.minecraft.network.MessageType;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.PlayerManager;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
+import net.minecraft.util.Formatting;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.UUID;
+
+
+public final class PrintUtil implements ServerLifecycleEvents.ServerStarted {
+
+    private static final Object syncMessage = new Object();
+    private static final Object syncBroadcast = new Object();
+
+    private static final Style broadcastStyle = Style.EMPTY.withColor(Formatting.AQUA);
+    private static final Style infoStyle = Style.EMPTY.withColor(Formatting.WHITE);
+    private static final Style stressStyle = Style.EMPTY.withColor(Formatting.AQUA);
+    private static final Style warnStyle = Style.EMPTY.withColor(Formatting.YELLOW);
+    private static final Style errorStyle = Style.EMPTY.withColor(Formatting.DARK_RED);
+
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final String LOG_HEADING = "[Blame]";
+    private static PlayerManager playerManager = null;
+
+    private static final UUID UUID_NULL = UUID.fromString("00000000-0000-0000-0000-000000000000");
+
+    // Used to handle server started event, to get player manager
+    // You should put `ServerLifecycleEvents.SERVER_STARTED.register(PrintUtil.INSTANCE);` in the plugin init method
+    public static final PrintUtil INSTANCE = new PrintUtil();
+
+    private PrintUtil() {
+    }
+
+    @Override
+    public void onServerStarted(MinecraftServer minecraftServer) {
+        PrintUtil.playerManager = minecraftServer.getPlayerManager();
+    }
+
+    public static void setPlayerManager(PlayerManager playerManager) {
+        if (PrintUtil.playerManager == null)
+            PrintUtil.playerManager = playerManager;
+    }
+
+    public static void broadcast(String message) {
+        synchronized (syncBroadcast) {
+            if (playerManager != null)
+                playerManager.broadcastChatMessage(
+                        new LiteralText(message).setStyle(broadcastStyle),
+                        MessageType.SYSTEM,
+                        UUID_NULL
+                );
+        }
+    }
+
+    public static CommandContext<ServerCommandSource> msgStress(CommandContext<ServerCommandSource> context, String messageText) {
+        return msgStress(context, messageText, false);
+    }
+
+    public static CommandContext<ServerCommandSource> msgInfo(CommandContext<ServerCommandSource> context, String messageText) {
+        return msgInfo(context, messageText, false);
+    }
+
+    public static CommandContext<ServerCommandSource> msgWarn(CommandContext<ServerCommandSource> context, String messageText) {
+        return msgWarn(context, messageText, false);
+    }
+
+    public static CommandContext<ServerCommandSource> msgErr(CommandContext<ServerCommandSource> context, String messageText) {
+        return msgErr(context, messageText, false);
+    }
+
+    public static CommandContext<ServerCommandSource> msgStress(CommandContext<ServerCommandSource> context, String messageText, boolean broadcastToOps) {
+        return message(context, messageText, broadcastToOps, stressStyle);
+    }
+
+    public static CommandContext<ServerCommandSource> msgInfo(CommandContext<ServerCommandSource> context, String messageText, boolean broadcastToOps) {
+        return message(context, messageText, broadcastToOps, infoStyle);
+    }
+
+    public static CommandContext<ServerCommandSource> msgWarn(CommandContext<ServerCommandSource> context, String messageText, boolean broadcastToOps) {
+        return message(context, messageText, broadcastToOps, warnStyle);
+    }
+
+    public static CommandContext<ServerCommandSource> msgErr(CommandContext<ServerCommandSource> context, String messageText, boolean broadcastToOps) {
+        return message(context, messageText, broadcastToOps, errorStyle);
+    }
+
+    private static CommandContext<ServerCommandSource> message(CommandContext<ServerCommandSource> context, String messageText, boolean broadcastToOps, Style style) {
+        synchronized (syncMessage) {
+            LiteralText text = new LiteralText(messageText);
+            text.setStyle(style);
+            context.getSource().sendFeedback(text, broadcastToOps);
+        }
+        return context;
+    }
+
+    /**
+     * Print debug message on the server console.
+     *
+     * @param string the message.
+     */
+    public static void debug(String string) {
+        LOGGER.debug(LOG_HEADING + " " + string);
+    }
+
+    /**
+     * Print informative message on the server console.
+     *
+     * @param string the message.
+     */
+    public static void info(String string) {
+        LOGGER.info(LOG_HEADING + " " + string);
+    }
+
+    /**
+     * Print warning message on the server console.
+     *
+     * @param string the message.
+     */
+    public static void warn(String string) {
+        LOGGER.warn(LOG_HEADING + " " + string);
+    }
+
+    /**
+     * Print error message on the server console.
+     *
+     * @param string the message.
+     */
+    public static void error(String string) {
+        LOGGER.error(LOG_HEADING + " " + string);
+    }
+
+}
