@@ -2,7 +2,6 @@ package com.keuin.blame.util;
 
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -12,19 +11,19 @@ import net.minecraft.util.Formatting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static com.keuin.blame.util.UuidUtils.UUID_NULL;
-
 
 public final class PrintUtil implements ServerLifecycleEvents.ServerStarted {
+
+    // version: 1.2 (for 1.15.2)
 
     private static final Object syncMessage = new Object();
     private static final Object syncBroadcast = new Object();
 
-    private static final Style broadcastStyle = Style.EMPTY.withColor(Formatting.AQUA);
-    private static final Style infoStyle = Style.EMPTY.withColor(Formatting.WHITE);
-    private static final Style stressStyle = Style.EMPTY.withColor(Formatting.AQUA);
-    private static final Style warnStyle = Style.EMPTY.withColor(Formatting.YELLOW);
-    private static final Style errorStyle = Style.EMPTY.withColor(Formatting.DARK_RED);
+    private static final Style broadcastStyle = new Style().setColor(Formatting.AQUA);
+    private static final Style infoStyle = new Style().setColor(Formatting.WHITE);
+    private static final Style stressStyle = new Style().setColor(Formatting.AQUA);
+    private static final Style warnStyle = new Style().setColor(Formatting.YELLOW);
+    private static final Style errorStyle = new Style().setColor(Formatting.DARK_RED);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String LOG_HEADING = "[Blame]";
@@ -52,8 +51,7 @@ public final class PrintUtil implements ServerLifecycleEvents.ServerStarted {
             if (playerManager != null)
                 playerManager.broadcastChatMessage(
                         new LiteralText(message).setStyle(broadcastStyle),
-                        MessageType.SYSTEM,
-                        UUID_NULL
+                        false
                 );
         }
     }
