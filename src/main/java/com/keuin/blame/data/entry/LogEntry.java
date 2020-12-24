@@ -44,7 +44,7 @@ public class LogEntry {
     public int version = 1;
 
     @BsonProperty(GAME_VERSION)
-    public String gameVersion = MinecraftVersion.field_25319.getName();
+    public String gameVersion = (new MinecraftVersion()).getName();
 
     @BsonProperty(TIMESTAMP_MILLIS)
     public long timeMillis = 0;
