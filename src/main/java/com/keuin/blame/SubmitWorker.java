@@ -50,7 +50,7 @@ public class SubmitWorker {
             while (this.run) {
                 LogEntry entry = queue.take();
                 collection.insertOne(entry);
-                logger.info("Entry inserted.");
+//                logger.info("Entry inserted.");
             }
         } catch (InterruptedException ignored) {
         } catch (MongoClientException exception) {

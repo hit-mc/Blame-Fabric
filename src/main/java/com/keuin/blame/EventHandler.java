@@ -21,11 +21,29 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
 
     public static final EventHandler INSTANCE = new EventHandler();
 
+    private static final long MAX_DUPE_INTERVAL = 80; // （判定为重复的必要条件）最大间隔毫秒数
+
+    private LogEntry lastUseBlockEntry; //去重用
+    private LogEntry lastUseEntityEntry;
+    private LogEntry lastUseItemEntry; // TODO
+
     private EventHandler() {
     }
 
     @Override
     public void onPlayerUseBlock(PlayerEntity playerEntity, World world, Hand hand, BlockHitResult blockHitResult) {
+        boolean checkDuplication = false;
+        long ts = System.currentTimeMillis();
+        if (lastUseBlockEntry != null && (ts - lastUseBlockEntry.timeMillis) <= MAX_DUPE_INTERVAL) {
+            if (
+                    lastUseBlockEntry.subjectPos.getX() == playerEntity.getX()
+                            && lastUseBlockEntry.subjectPos.getY() == playerEntity.getY()
+                            && lastUseBlockEntry.subjectPos.getZ() == playerEntity.getZ() // 快速判断，减小不相同导致的资源开销
+            ) {
+                checkDuplication = true;
+            }
+        }
+        // 不检查重复，直接提交
         String worldString = MinecraftUtil.worldToString(world);
         String blockId = Registry.BLOCK.getId(world.getBlockState(blockHitResult.getBlockPos()).getBlock()).toString();
         LogEntry entry = LogEntryFactory.playerWithBlock(
@@ -36,6 +54,13 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
                 worldString,
                 ActionType.BLOCK_USE
         );
+        if (checkDuplication) {
+            LogEntry alignedEntry = new LogEntry(lastUseBlockEntry);
+            alignedEntry.timeMillis = entry.timeMillis;
+            if (Objects.equals(alignedEntry, entry))
+                return;
+        }
+        lastUseBlockEntry = entry;
         SubmitWorker.INSTANCE.submit(entry);
 //        PrintUtil.broadcast("use_block; block_id=" + blockId + "; world=" + worldString);
         // TODO: 增加判断，事件触发的时候用户不一定真正使用了方块（也可能是无效的动作）。放置方块的时候也会触发这个事件
@@ -95,6 +120,20 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
 
     @Override
     public void onPlayerUseEntity(PlayerEntity playerEntity, World world, Hand hand, Entity entity, @Nullable EntityHitResult entityHitResult) {
+        boolean checkDuplication = false;
+        long ts = System.currentTimeMillis();
+        if (lastUseEntityEntry != null && (ts - lastUseEntityEntry.timeMillis) <= MAX_DUPE_INTERVAL) {
+            if (
+                    lastUseEntityEntry.subjectPos.getX() == playerEntity.getX()
+                            && lastUseEntityEntry.subjectPos.getY() == playerEntity.getY()
+                            && lastUseEntityEntry.subjectPos.getZ() == playerEntity.getZ() // 快速判断，减小不相同导致的资源开销
+                            && lastUseEntityEntry.objectPos.getX() == entity.getX()
+                            && lastUseEntityEntry.objectPos.getY() == entity.getY()
+                            && lastUseEntityEntry.objectPos.getZ() == entity.getZ()
+            ) {
+                checkDuplication = true;
+            }
+        }
         String entityId = Registry.ENTITY_TYPE.getId(entity.getType()).toString();
         String worldString = MinecraftUtil.worldToString(world);
         LogEntry entry = LogEntryFactory.playerWithEntity(
@@ -105,6 +144,14 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
                 worldString,
                 ActionType.ENTITY_USE
         );
+        if (checkDuplication) {
+            LogEntry alignedEntry = new LogEntry(lastUseEntityEntry);
+            alignedEntry.timeMillis = entry.timeMillis;
+            if (Objects.equals(alignedEntry, entry)) {
+                return;
+            }
+        }
+        lastUseEntityEntry = entry;
         SubmitWorker.INSTANCE.submit(entry);
 //        PrintUtil.broadcast("use_entity; entity_id=" + entityId);
         // TODO: 增加判断，无效的时候也会触发这个事件
