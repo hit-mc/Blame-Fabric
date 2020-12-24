@@ -1,13 +1,17 @@
-package com.keuin.blame.data;
+package com.keuin.blame.data.entry;
 
+import com.keuin.blame.data.WorldPos;
 import com.keuin.blame.data.enums.ActionType;
 import com.keuin.blame.data.enums.ObjectType;
 import com.keuin.blame.util.PrettyUtil;
 import com.keuin.blame.util.UuidUtils;
 import net.minecraft.MinecraftVersion;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.util.Objects;
 import java.util.UUID;
+
+import static com.keuin.blame.data.entry.LogEntryNamesV1.*;
 
 public class LogEntry {
 
@@ -36,36 +40,42 @@ public class LogEntry {
     //    }
     //}
 
-    //    @BsonProperty("version")
-    private static int version = 1;
-    //    @BsonProperty("game_version")
-    private static String gameVersion = MinecraftVersion.field_25319.getName();
-    //    @BsonProperty("timestamp_millis")
-    private long timeMillis = 0;
-    //    @BsonProperty("subject_id")
-    private String subjectId = "";
-    //    @BsonProperty("subject_uuid")
-    private String subjectUUID = UuidUtils.UUID_NULL.toString(); // TODO: use Binary instead (BasicDBObject("_id", Binary(session.getIp().getAddress()))) (https://stackoverflow.com/questions/30566905/store-byte-in-mongodb-using-java/40843195)
-    //    @BsonProperty("subject_pos")
-    private WorldPos subjectPos = WorldPos.NULL_POS; // TODO: write codec and transformer for this
-    //    @BsonProperty("action_type")
-    private ActionType actionType = ActionType.NULL;
-    //    @BsonProperty("object_type")
-    private ObjectType objectType = ObjectType.NULL;
-    //    @BsonProperty("object_id")
-    private String objectId = "";
-    //    @BsonProperty("object_pos")
-    private WorldPos objectPos = WorldPos.NULL_POS;
+    @BsonProperty(VERSION)
+    public int version = 1;
 
-    public static final LogEntry EMPTY_ENTRY = new LogEntry();
+    @BsonProperty(GAME_VERSION)
+    public String gameVersion = MinecraftVersion.field_25319.getName();
 
-    protected LogEntry() {
+    @BsonProperty(TIMESTAMP_MILLIS)
+    public long timeMillis = 0;
+
+    @BsonProperty(SUBJECT_ID)
+    public String subjectId = "";
+
+    @BsonProperty(SUBJECT_UUID)
+    public UUID subjectUUID = UuidUtils.UUID_NULL;
+
+    @BsonProperty(SUBJECT_POS)
+    public WorldPos subjectPos = WorldPos.NULL_POS;
+
+    @BsonProperty(ACTION_TYPE)
+    public ActionType actionType = ActionType.NULL;
+
+    @BsonProperty(OBJECT_TYPE)
+    public ObjectType objectType = ObjectType.NULL;
+
+    @BsonProperty(OBJECT_ID)
+    public String objectId = "";
+
+    @BsonProperty(OBJECT_POS)
+    public WorldPos objectPos = WorldPos.NULL_POS;
+
+    public LogEntry() {
     }
 
     public LogEntry(long timeMillis, String subjectId, UUID subjectUUID, WorldPos subjectPos, ActionType actionType, ObjectType objectType, String objectId, WorldPos objectPos) {
-        this.subjectId = subjectId;
-//        this.subjectUUID = UuidUtils.asBytes(subjectUUID);
-//        this.subjectUUID
+        if (subjectId == null)
+            throw new IllegalArgumentException("subjectId cannot be null");
         if (subjectUUID == null)
             throw new IllegalArgumentException("subjectUUID cannot be null");
         if (subjectPos == null)
@@ -79,8 +89,9 @@ public class LogEntry {
         if (objectPos == null)
             throw new IllegalArgumentException("objectPos cannot be null");
 
+        this.subjectId = subjectId;
         this.timeMillis = timeMillis;
-        this.subjectUUID = subjectUUID.toString();
+        this.subjectUUID = subjectUUID;
         this.subjectPos = subjectPos;
         this.actionType = actionType;
         this.objectType = objectType;
@@ -88,52 +99,14 @@ public class LogEntry {
         this.objectPos = objectPos;
     }
 
-    public int getVersion() {
-        return version;
-    }
-
-    public String getGameVersion() {
-        return gameVersion;
-    }
-
-    public long getTimeMillis() {
-        return timeMillis;
-    }
-
-    public String getSubjectId() {
-        return subjectId;
-    }
-
-    public UUID getSubjectUUID() {
-        return UUID.fromString(subjectUUID);
-    }
-
-    public WorldPos getSubjectPos() {
-        return subjectPos;
-    }
-
-    public ActionType getActionType() {
-        return actionType;
-    }
-
-    public ObjectType getObjectType() {
-        return objectType;
-    }
-
-    public String getObjectId() {
-        return objectId;
-    }
-
-    public WorldPos getObjectPos() {
-        return objectPos;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LogEntry entry = (LogEntry) o;
-        return timeMillis == entry.timeMillis &&
+        return version == entry.version &&
+                timeMillis == entry.timeMillis &&
+                Objects.equals(gameVersion, entry.gameVersion) &&
                 Objects.equals(subjectId, entry.subjectId) &&
                 Objects.equals(subjectUUID, entry.subjectUUID) &&
                 Objects.equals(subjectPos, entry.subjectPos) &&
@@ -145,7 +118,7 @@ public class LogEntry {
 
     @Override
     public int hashCode() {
-        return Objects.hash(timeMillis, subjectId, subjectUUID, subjectPos, actionType, objectType, objectId, objectPos);
+        return Objects.hash(version, gameVersion, timeMillis, subjectId, subjectUUID, subjectPos, actionType, objectType, objectId, objectPos);
     }
 
     @Override

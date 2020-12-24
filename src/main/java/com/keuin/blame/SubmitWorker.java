@@ -1,6 +1,6 @@
 package com.keuin.blame;
 
-import com.keuin.blame.data.LogEntry;
+import com.keuin.blame.data.entry.LogEntry;
 import com.keuin.blame.util.DatabaseUtil;
 import com.mongodb.MongoClientException;
 import com.mongodb.client.MongoClient;

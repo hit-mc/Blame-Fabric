@@ -1,6 +1,6 @@
 package com.keuin.blame.lookup;
 
-import com.keuin.blame.data.LogEntry;
+import com.keuin.blame.data.entry.LogEntry;
 import com.mongodb.client.FindIterable;
 
 public abstract class AbstractLookupFilter {

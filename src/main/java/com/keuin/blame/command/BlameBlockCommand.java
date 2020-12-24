@@ -1,7 +1,7 @@
 package com.keuin.blame.command;
 
-import com.keuin.blame.data.LogEntry;
 import com.keuin.blame.data.WorldPos;
+import com.keuin.blame.data.entry.LogEntry;
 import com.keuin.blame.lookup.BlockPosLookupFilter;
 import com.keuin.blame.lookup.LookupCallback;
 import com.keuin.blame.lookup.LookupManager;

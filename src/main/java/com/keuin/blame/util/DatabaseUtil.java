@@ -15,11 +15,6 @@ import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 
 public class DatabaseUtil {
 
-//    static {
-//        BSON.addEncodingHook(ActionType.class, new ActionTypeTransformer());
-//        BSON.addEncodingHook(ObjectType.class, new ObjectTypeTransformer());
-//    }
-
     public static final MongoConfig MONGO_CONFIG = Blame.config.getMongoConfig();
     public static final CodecRegistry CODEC_REGISTRY = CodecRegistries.fromRegistries(
             com.mongodb.MongoClient.getDefaultCodecRegistry(),
@@ -27,7 +22,6 @@ public class DatabaseUtil {
                     new ActionTypeCodec(),
                     new ObjectTypeCodec(),
                     new WorldPosCodec()
-//                    new LogEntryCodec()
             ),
             fromProviders(PojoCodecProvider.builder().automatic(true).build())
     );

@@ -1,5 +1,6 @@
 package com.keuin.blame.data;
 
+import com.keuin.blame.data.entry.LogEntry;
 import com.keuin.blame.data.enums.ActionType;
 import com.keuin.blame.data.enums.ObjectType;
 import net.minecraft.entity.player.PlayerEntity;

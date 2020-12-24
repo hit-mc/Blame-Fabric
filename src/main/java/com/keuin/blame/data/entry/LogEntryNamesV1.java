@@ -1,6 +1,6 @@
-package com.keuin.blame.data.enums.codec;
+package com.keuin.blame.data.entry;
 
-public class LogEntryNames {
+public class LogEntryNamesV1 {
     public static final String VERSION = "version";
     public static final String GAME_VERSION = "game_version";
     public static final String TIMESTAMP_MILLIS = "timestamp_millis";

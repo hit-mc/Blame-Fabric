@@ -1,8 +1,8 @@
 package com.keuin.blame;
 
 import com.keuin.blame.adapter.handler.*;
-import com.keuin.blame.data.LogEntry;
 import com.keuin.blame.data.LogEntryFactory;
+import com.keuin.blame.data.entry.LogEntry;
 import com.keuin.blame.data.enums.ActionType;
 import com.keuin.blame.util.MinecraftUtil;
 import com.keuin.blame.util.PrintUtil;
