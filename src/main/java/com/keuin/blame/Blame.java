@@ -2,6 +2,7 @@ package com.keuin.blame;
 
 import com.google.gson.Gson;
 import com.keuin.blame.adapter.*;
+import com.keuin.blame.adapter.handler.PlaceBlockHandler;
 import com.keuin.blame.command.BlameBlockCommand;
 import com.keuin.blame.config.BlameConfig;
 import com.keuin.blame.lookup.LookupManager;
@@ -73,6 +74,7 @@ public class Blame implements ModInitializer {
 
         // hook game events
         AttackEntityCallback.EVENT.register(new AttackEntityAdapter(EventHandler.INSTANCE));
+        PlaceBlockHandler.EVENT.register(EventHandler.INSTANCE);
         PlayerBlockBreakEvents.AFTER.register(new BreakBlockAdapter(EventHandler.INSTANCE));
         UseBlockCallback.EVENT.register(new UseBlockAdapter(EventHandler.INSTANCE));
         UseEntityCallback.EVENT.register(new UseEntityAdapter(EventHandler.INSTANCE));
