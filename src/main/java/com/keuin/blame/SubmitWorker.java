@@ -1,22 +1,12 @@
 package com.keuin.blame;
 
-import com.keuin.blame.config.MongoConfig;
 import com.keuin.blame.data.LogEntry;
-import com.keuin.blame.data.enums.ActionType;
-import com.keuin.blame.data.enums.ObjectType;
-import com.keuin.blame.data.enums.codec.ActionTypeCodec;
-import com.keuin.blame.data.enums.codec.ObjectTypeCodec;
-import com.keuin.blame.data.enums.transformer.ActionTypeTransformer;
-import com.keuin.blame.data.enums.transformer.ObjectTypeTransformer;
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
+import com.keuin.blame.util.DatabaseUtil;
+import com.mongodb.MongoClientException;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import org.bson.BSON;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -24,37 +14,16 @@ import java.util.logging.Logger;
 
 public class SubmitWorker {
 
-    public static final SubmitWorker INSTANCE = new SubmitWorker(Blame.config.getMongoConfig());
+    public static final SubmitWorker INSTANCE = new SubmitWorker();
     private final Logger logger = Logger.getLogger(SubmitWorker.class.getName());
 
     private final BlockingQueue<LogEntry> queue = new LinkedBlockingDeque<>(4096);
     private final Thread thread = new Thread(SubmitWorker.this::run);
     private boolean run = true;
 
-    private final MongoConfig mongoConfig;
-    private final MongoClientSettings settings;
 
-
-    private SubmitWorker(MongoConfig mongoConfig) {
-        if (mongoConfig == null)
-            throw new IllegalArgumentException("mongo config cannot be null");
-        this.mongoConfig = mongoConfig;
-        logger.fine("Connecting to MongoDB server `" + mongoConfig.getAddress()
-                + "` with database `" + mongoConfig.getDatabaseName()
-                + "` and collection `" + mongoConfig.getLogCollectionName() + "`.");
-
-        BSON.addEncodingHook(ActionType.class, new ActionTypeTransformer());
-        BSON.addEncodingHook(ObjectType.class, new ObjectTypeTransformer());
-
-        CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
-                com.mongodb.MongoClient.getDefaultCodecRegistry(),
-                CodecRegistries.fromCodecs(new ActionTypeCodec(), new ObjectTypeCodec())
-        );
-
-        settings = MongoClientSettings.builder()
-                .applyConnectionString(new ConnectionString(mongoConfig.getAddress()))
-                .codecRegistry(codecRegistry)
-                .build();
+    private SubmitWorker() {
+        thread.setUncaughtExceptionHandler((t, e) -> logger.severe(String.format("Exception in thread %s: %s", t.getName(), e)));
         thread.start();
     }
 
@@ -70,18 +39,22 @@ public class SubmitWorker {
     }
 
     private void run() {
-        try (final MongoClient mongoClient = MongoClients.create(settings)) {
+        try (final MongoClient mongoClient = MongoClients.create(DatabaseUtil.CLIENT_SETTINGS)) {
             final MongoDatabase db = mongoClient.getDatabase(
-                    mongoConfig.getDatabaseName()
+                    DatabaseUtil.MONGO_CONFIG.getDatabaseName()
             );
             final MongoCollection<LogEntry> collection = db.getCollection(
-                    mongoConfig.getLogCollectionName(), LogEntry.class
+                    DatabaseUtil.MONGO_CONFIG.getLogCollectionName(), LogEntry.class
             );
+            // TODO: 第一个事件触发导致延迟很大
             while (this.run) {
                 LogEntry entry = queue.take();
                 collection.insertOne(entry);
+                logger.info("Entry inserted.");
             }
         } catch (InterruptedException ignored) {
+        } catch (MongoClientException exception) {
+            logger.severe("Failed to submit: " + exception + ". Worker is quitting...");
         }
     }
 

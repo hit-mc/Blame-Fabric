@@ -2,7 +2,9 @@ package com.keuin.blame.data;
 
 import com.keuin.blame.data.enums.ActionType;
 import com.keuin.blame.data.enums.ObjectType;
-import org.bson.codecs.pojo.annotations.BsonProperty;
+import com.keuin.blame.util.PrettyUtil;
+import com.keuin.blame.util.UuidUtils;
+import net.minecraft.MinecraftVersion;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -34,24 +36,34 @@ public class LogEntry {
     //    }
     //}
 
-    @BsonProperty("version")
-    private final int version = 1;
-    @BsonProperty("timestamp_millis")
-    private final long timeMillis;
-    @BsonProperty("subject_uuid")
-    private final String subjectUUID; // TODO: use Binary instead (BasicDBObject("_id", Binary(session.getIp().getAddress()))) (https://stackoverflow.com/questions/30566905/store-byte-in-mongodb-using-java/40843195)
-    @BsonProperty("subject_pos")
-    private final WorldPos subjectPos; // TODO: write codec and transformer for this
-    @BsonProperty("action_type")
-    private final ActionType actionType;
-    @BsonProperty("object_type")
-    private final ObjectType objectType;
-    @BsonProperty("object_id")
-    private final String objectId;
-    @BsonProperty("object_pos")
-    private final WorldPos objectPos;
+    //    @BsonProperty("version")
+    private static int version = 1;
+    //    @BsonProperty("game_version")
+    private static String gameVersion = MinecraftVersion.field_25319.getName();
+    //    @BsonProperty("timestamp_millis")
+    private long timeMillis = 0;
+    //    @BsonProperty("subject_id")
+    private String subjectId = "";
+    //    @BsonProperty("subject_uuid")
+    private String subjectUUID = UuidUtils.UUID_NULL.toString(); // TODO: use Binary instead (BasicDBObject("_id", Binary(session.getIp().getAddress()))) (https://stackoverflow.com/questions/30566905/store-byte-in-mongodb-using-java/40843195)
+    //    @BsonProperty("subject_pos")
+    private WorldPos subjectPos = WorldPos.NULL_POS; // TODO: write codec and transformer for this
+    //    @BsonProperty("action_type")
+    private ActionType actionType = ActionType.NULL;
+    //    @BsonProperty("object_type")
+    private ObjectType objectType = ObjectType.NULL;
+    //    @BsonProperty("object_id")
+    private String objectId = "";
+    //    @BsonProperty("object_pos")
+    private WorldPos objectPos = WorldPos.NULL_POS;
 
-    public LogEntry(long timeMillis, UUID subjectUUID, WorldPos subjectPos, ActionType actionType, ObjectType objectType, String objectId, WorldPos objectPos) {
+    public static final LogEntry EMPTY_ENTRY = new LogEntry();
+
+    protected LogEntry() {
+    }
+
+    public LogEntry(long timeMillis, String subjectId, UUID subjectUUID, WorldPos subjectPos, ActionType actionType, ObjectType objectType, String objectId, WorldPos objectPos) {
+        this.subjectId = subjectId;
 //        this.subjectUUID = UuidUtils.asBytes(subjectUUID);
 //        this.subjectUUID
         if (subjectUUID == null)
@@ -77,11 +89,19 @@ public class LogEntry {
     }
 
     public int getVersion() {
-        return 1;
+        return version;
+    }
+
+    public String getGameVersion() {
+        return gameVersion;
     }
 
     public long getTimeMillis() {
         return timeMillis;
+    }
+
+    public String getSubjectId() {
+        return subjectId;
     }
 
     public UUID getSubjectUUID() {
@@ -113,8 +133,8 @@ public class LogEntry {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LogEntry entry = (LogEntry) o;
-        return version == entry.version &&
-                timeMillis == entry.timeMillis &&
+        return timeMillis == entry.timeMillis &&
+                Objects.equals(subjectId, entry.subjectId) &&
                 Objects.equals(subjectUUID, entry.subjectUUID) &&
                 Objects.equals(subjectPos, entry.subjectPos) &&
                 actionType == entry.actionType &&
@@ -125,6 +145,25 @@ public class LogEntry {
 
     @Override
     public int hashCode() {
-        return Objects.hash(version, timeMillis, subjectUUID, subjectPos, actionType, objectType, objectId, objectPos);
+        return Objects.hash(timeMillis, subjectId, subjectUUID, subjectPos, actionType, objectType, objectId, objectPos);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Time: ").append(PrettyUtil.timestampToString(timeMillis)).append("\n");
+        builder.append("Subject: ").append(subjectId).append("{").append(subjectUUID).append("}@")
+                .append(subjectPos.toString())
+                .append("\n");
+        builder.append("Action: ").append(actionType.toString()).append("\n");
+        builder.append("Object: ").append(objectType.toString()).append("[").append(objectId).append("]@")
+                .append(objectPos.toString())
+                .append("\n");
+        builder.append("(entryVersion: ")
+                .append(version)
+                .append(", gameVersion:")
+                .append(gameVersion)
+                .append(")");
+        return builder.toString();
     }
 }

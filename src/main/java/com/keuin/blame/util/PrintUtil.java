@@ -12,7 +12,7 @@ import net.minecraft.util.Formatting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.UUID;
+import static com.keuin.blame.util.UuidUtils.UUID_NULL;
 
 
 public final class PrintUtil implements ServerLifecycleEvents.ServerStarted {
@@ -29,8 +29,6 @@ public final class PrintUtil implements ServerLifecycleEvents.ServerStarted {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String LOG_HEADING = "[Blame]";
     private static PlayerManager playerManager = null;
-
-    private static final UUID UUID_NULL = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     // Used to handle server started event, to get player manager
     // You should put `ServerLifecycleEvents.SERVER_STARTED.register(PrintUtil.INSTANCE);` in the plugin init method

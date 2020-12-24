@@ -2,16 +2,17 @@ package com.keuin.blame.data;
 
 import com.keuin.blame.data.enums.ActionType;
 import com.keuin.blame.data.enums.ObjectType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 
-import java.util.UUID;
-
 public class LogEntryFactory {
-    public static LogEntry playerWithBlock(UUID playerUUID, Vec3d playerPos, String playerWorld, String blockId, Vec3i blockPos, String blockWorld, ActionType actionType) {
+    public static LogEntry playerWithBlock(PlayerEntity player, String playerWorld, String blockId, Vec3i blockPos, String blockWorld, ActionType actionType) {
+        Vec3d playerPos = player.getPos();
         return new LogEntry(
                 System.currentTimeMillis(),
-                playerUUID,
+                player.getName().asString(),
+                player.getUuid(),
                 new WorldPos(playerWorld, playerPos.x, playerPos.y, playerPos.z),
                 actionType,
                 ObjectType.BLOCK,
@@ -20,10 +21,12 @@ public class LogEntryFactory {
         );
     }
 
-    public static LogEntry playerWithEntity(UUID playerUUID, Vec3d playerPos, String playerWorld, String entityId, Vec3d entityPos, String entityWorld, ActionType actionType) {
+    public static LogEntry playerWithEntity(PlayerEntity player, String playerWorld, String entityId, Vec3d entityPos, String entityWorld, ActionType actionType) {
+        Vec3d playerPos = player.getPos();
         return new LogEntry(
                 System.currentTimeMillis(),
-                playerUUID,
+                player.getName().asString(),
+                player.getUuid(),
                 new WorldPos(playerWorld, playerPos.x, playerPos.y, playerPos.z),
                 actionType,
                 ObjectType.ENTITY,
@@ -32,10 +35,12 @@ public class LogEntryFactory {
         );
     }
 
-    public static LogEntry playerWithItem(UUID playerUUID, Vec3d playerPos, String playerWorld, String itemId, ActionType actionType) {
+    public static LogEntry playerWithItem(PlayerEntity player, String playerWorld, String itemId, ActionType actionType) {
+        Vec3d playerPos = player.getPos();
         return new LogEntry(
                 System.currentTimeMillis(),
-                playerUUID,
+                player.getName().asString(),
+                player.getUuid(),
                 new WorldPos(playerWorld, playerPos.x, playerPos.y, playerPos.z),
                 actionType,
                 ObjectType.ENTITY,

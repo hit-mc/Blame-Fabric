@@ -2,17 +2,20 @@ package com.keuin.blame.data.enums;
 
 public enum ActionType implements IntegerEnum {
 
-    BLOCK_BREAK(1),
-    BLOCK_PLACE(2),
-    BLOCK_USE(3),
-    ENTITY_ATTACK(4),
-    ENTITY_USE(5),
-    ITEM_USE(6);
+    NULL(0, "NULL"),
+    BLOCK_BREAK(1, "BREAK_BLOCK"),
+    BLOCK_PLACE(2, "PLACE_BLOCK"),
+    BLOCK_USE(3, "USE_BLOCK"),
+    ENTITY_ATTACK(4, "ATTACK_ENTITY"),
+    ENTITY_USE(5, "USE_ENTITY"),
+    ITEM_USE(6, "USE_ITEM");
 
     private final int value;
+    private final String typeString;
 
-    ActionType(int value) {
+    ActionType(int value, String typeString) {
         this.value = value;
+        this.typeString = typeString;
     }
 
     public static ActionType parseInt(int value) {
@@ -29,9 +32,7 @@ public enum ActionType implements IntegerEnum {
 
     @Override
     public String toString() {
-        return "ActionType{" +
-                "value=" + value +
-                '}';
+        return typeString;
     }
 
 }

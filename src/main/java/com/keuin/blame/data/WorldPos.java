@@ -6,10 +6,10 @@ public class WorldPos {
 
     // immutable
 
-    private final String world;
-    private final double x;
-    private final double y;
-    private final double z;
+    private String world = "";
+    private double x = 0;
+    private double y = 0;
+    private double z = 0;
 
     public static final WorldPos NULL_POS = new WorldPos("", 0, 0, 0);
 
@@ -20,6 +20,7 @@ public class WorldPos {
         this.x = x;
         this.y = y;
         this.z = z;
+//        System.out.printf("%s, %f, %f, %f%n", world, x, y, z);
     }
 
     public String getWorld() {
@@ -52,5 +53,17 @@ public class WorldPos {
     @Override
     public int hashCode() {
         return Objects.hash(world, x, y, z);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("(%s, %s, %s -> %s)", prettyDouble(x), prettyDouble(y), prettyDouble(z), world);
+    }
+
+    private String prettyDouble(double d) {
+        if ((d - (int) d) < 1e-3)
+            return String.valueOf((int) d);
+        else
+            return String.format("%.3f", d);
     }
 }

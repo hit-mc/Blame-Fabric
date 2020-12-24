@@ -12,7 +12,8 @@ group = project.maven_group
 
 dependencies {
 
-	compile 'org.mongodb:mongo-java-driver:3.12.7'
+	implementation 'junit:junit:4.12'
+    compile 'org.mongodb:mongo-java-driver:3.12.7'
 
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"

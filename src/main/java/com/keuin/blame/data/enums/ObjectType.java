@@ -2,12 +2,14 @@ package com.keuin.blame.data.enums;
 
 public enum ObjectType implements IntegerEnum {
 
-    BLOCK(1), ENTITY(2);
+    NULL(0, "NULL"), BLOCK(1, "BLOCK"), ENTITY(2, "ENTITY");
 
     private final int value;
+    private final String typeString;
 
-    ObjectType(int value) {
+    ObjectType(int value, String typeString) {
         this.value = value;
+        this.typeString = typeString;
     }
 
     public static ObjectType parseInt(int value) {
@@ -24,9 +26,7 @@ public enum ObjectType implements IntegerEnum {
 
     @Override
     public String toString() {
-        return "ObjectType{" +
-                "value=" + value +
-                '}';
+        return typeString;
     }
 
 }

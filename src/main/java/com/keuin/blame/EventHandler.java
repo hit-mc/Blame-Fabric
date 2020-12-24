@@ -30,8 +30,7 @@ public class EventHandler implements AttackEntityHandler, BreakBlockHandler, Use
         String worldString = MinecraftUtil.worldToString(world);
         String blockId = Registry.BLOCK.getId(world.getBlockState(blockHitResult.getBlockPos()).getBlock()).toString();
         LogEntry entry = LogEntryFactory.playerWithBlock(
-                playerEntity.getUuid(),
-                playerEntity.getPos(),
+                playerEntity,
                 worldString,
                 blockId,
                 blockHitResult.getBlockPos(),
@@ -49,8 +48,7 @@ public class EventHandler implements AttackEntityHandler, BreakBlockHandler, Use
         String worldString = MinecraftUtil.worldToString(world);
         String blockId = Registry.BLOCK.getId(blockState.getBlock()).toString();
         LogEntry entry = LogEntryFactory.playerWithBlock(
-                playerEntity.getUuid(),
-                playerEntity.getPos(),
+                playerEntity,
                 worldString,
                 blockId,
                 blockPos,
@@ -67,8 +65,7 @@ public class EventHandler implements AttackEntityHandler, BreakBlockHandler, Use
         String entityId = Registry.ENTITY_TYPE.getId(entity.getType()).toString();
         String worldString = MinecraftUtil.worldToString(world);
         LogEntry entry = LogEntryFactory.playerWithEntity(
-                playerEntity.getUuid(),
-                playerEntity.getPos(),
+                playerEntity,
                 worldString,
                 entityId,
                 entity.getPos(),
@@ -85,8 +82,7 @@ public class EventHandler implements AttackEntityHandler, BreakBlockHandler, Use
         String entityId = Registry.ENTITY_TYPE.getId(entity.getType()).toString();
         String worldString = MinecraftUtil.worldToString(world);
         LogEntry entry = LogEntryFactory.playerWithEntity(
-                playerEntity.getUuid(),
-                playerEntity.getPos(),
+                playerEntity,
                 worldString,
                 entityId,
                 entity.getPos(),
@@ -96,6 +92,7 @@ public class EventHandler implements AttackEntityHandler, BreakBlockHandler, Use
         SubmitWorker.INSTANCE.submit(entry);
         PrintUtil.broadcast("use_entity; entity_id=" + entityId);
         // TODO: 增加判断，无效的时候也会触发这个事件
+        // TODO: 增加cooldown，过滤掉两个相邻重复事件（时间间隔大概为20ms+）
         PrintUtil.broadcast(String.format("player %s use entity %s", playerEntity.getName().getString(), entity));
     }
 
@@ -103,14 +100,14 @@ public class EventHandler implements AttackEntityHandler, BreakBlockHandler, Use
     public void onPlayerUseItem(PlayerEntity playerEntity, World world, Hand hand) {
         String itemId = Registry.ITEM.getId(playerEntity.getStackInHand(hand).getItem()).toString();
         LogEntry entry = LogEntryFactory.playerWithItem(
-                playerEntity.getUuid(),
-                playerEntity.getPos(),
+                playerEntity,
                 MinecraftUtil.worldToString(world),
                 itemId,
                 ActionType.ITEM_USE
         );
         SubmitWorker.INSTANCE.submit(entry);
         PrintUtil.broadcast("use_item; item_id=" + itemId);
+        // TODO: 增加cooldown，过滤掉两个相邻重复事件（时间间隔大概为20ms+）
 //        PrintUtil.broadcast(String.format("player %s use item %s", playerEntity.getName().getString(), playerEntity.getStackInHand(hand)));
     }
 }
