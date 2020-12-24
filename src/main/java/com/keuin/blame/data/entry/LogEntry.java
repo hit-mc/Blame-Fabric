@@ -73,6 +73,20 @@ public class LogEntry {
     public LogEntry() {
     }
 
+    // 拷贝构造器
+    public LogEntry(LogEntry entry) {
+        this.version = entry.version;
+        this.gameVersion = entry.gameVersion;
+        this.timeMillis = entry.timeMillis;
+        this.subjectId = entry.subjectId;
+        this.subjectUUID = entry.subjectUUID;
+        this.subjectPos = entry.subjectPos;
+        this.actionType = entry.actionType;
+        this.objectType = entry.objectType;
+        this.objectId = entry.objectId;
+        this.objectPos = entry.objectPos;
+    }
+
     public LogEntry(long timeMillis, String subjectId, UUID subjectUUID, WorldPos subjectPos, ActionType actionType, ObjectType objectType, String objectId, WorldPos objectPos) {
         if (subjectId == null)
             throw new IllegalArgumentException("subjectId cannot be null");

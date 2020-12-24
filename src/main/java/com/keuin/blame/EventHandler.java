@@ -17,6 +17,8 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, BreakBlockHandler, UseBlockHandler, UseEntityHandler, UseItemHandler {
 
     public static final EventHandler INSTANCE = new EventHandler();
