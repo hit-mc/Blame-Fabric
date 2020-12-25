@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Blame implements ModInitializer {
@@ -51,6 +52,11 @@ public class Blame implements ModInitializer {
         return true;
     }
 
+    private static void disableMongoSpamming() {
+        Logger mongoLogger = Logger.getLogger("org.mongodb.driver");
+        mongoLogger.setLevel(Level.WARNING);
+    }
+
     @Override
     public void onInitialize() {
         // This code runs as soon as Minecraft is in a mod-load-ready state.
@@ -59,6 +65,8 @@ public class Blame implements ModInitializer {
 
         if (!loadConfig())
             return;
+
+        disableMongoSpamming();
 
         // hook disable event
         ServerLifecycleEvents.SERVER_STOPPING.register(new ServerLifecycleEvents.ServerStopping() {

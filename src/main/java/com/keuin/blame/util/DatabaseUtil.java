@@ -29,4 +29,9 @@ public class DatabaseUtil {
             .applyConnectionString(new ConnectionString(MONGO_CONFIG.getAddress()))
             .codecRegistry(CODEC_REGISTRY)
             .build();
+
+    // TODO: Auto create indexes if the collection is empty
+    //   db.log.createIndex({ timestamp_millis: -1 })
+    //   db.log.createIndex({ timestamp_millis: -1, object_id: "hashed" })
+    //   db.log.createIndex({ timestamp_millis: -1, subject_id: "hashed" })
 }
