@@ -25,8 +25,10 @@ public class LookupManager {
         workers.forEach(LookupWorker::disable);
     }
 
-    public void lookup(AbstractLookupFilter filter, LookupCallback callback) {
-        queue.add(new LookupFilterWithCallback(callback, filter));
+    public void lookup(AbstractLookupFilter filter, LookupCallback callback, int lookUpLimit) {
+        if (lookUpLimit <= 0)
+            throw new IllegalArgumentException("lookup limit must be positive");
+        queue.add(new LookupFilterWithCallback(callback, filter, lookUpLimit));
     }
 
 }
