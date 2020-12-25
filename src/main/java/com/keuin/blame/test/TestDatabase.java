@@ -78,7 +78,7 @@ public class TestDatabase {
                         success[0] |= Objects.equals(e, entry);
                     }
                 }
-            });
+            }, 100);
             Thread.sleep(2000);
             assertTrue(success[0]);
         } catch (Exception e) {

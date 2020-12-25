@@ -43,7 +43,7 @@ public class LookupWorker extends Thread {
 
                 time = System.currentTimeMillis();
                 FindIterable<LogEntry> find = filter.find(
-                        collection.find().sort(Sorts.descending("timestamp_millis"))
+                        collection.find().sort(Sorts.descending("timestamp_millis")).limit(item.getLimit())
                 );
 //                FindIterable<LogEntry> find = collection.find();//.sort(Sorts.descending("timestamp_millis"));
                 time = System.currentTimeMillis() - time;

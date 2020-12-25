@@ -11,14 +11,13 @@ import net.minecraft.entity.Entity;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-import java.util.Iterator;
+import static com.keuin.blame.command.Commands.FAILED;
+import static com.keuin.blame.command.Commands.SUCCESS;
 
 public class BlameBlockCommand {
 
-    private static final int SUCCESS = 1;
-    private static final int FAILED = -1;
 
-    public static int run(CommandContext<ServerCommandSource> context) {
+    public static int blameBlock(CommandContext<ServerCommandSource> context) {
         Entity entity = context.getSource().getEntity();
         if (!(entity instanceof ServerPlayerEntity)) {
             // can only be executed by player
@@ -34,7 +33,8 @@ public class BlameBlockCommand {
         WorldPos blockPos = new WorldPos(world, x, y, z);
         LookupManager.INSTANCE.lookup(
                 new BlockPosLookupFilter(blockPos),
-                new Callback(context)
+                new Callback(context),
+                BlameLimitCommand.getLookupLimit(playerEntity.getUuid())
         );
         return SUCCESS;
     }
@@ -50,18 +50,16 @@ public class BlameBlockCommand {
         @Override
         public void onLookupFinishes(Iterable<LogEntry> logEntries) {
             StringBuilder printBuilder = new StringBuilder();
-            Iterator<LogEntry> iterator = logEntries.iterator();
-            int printCount;
-            for (printCount = 0; printCount < 5; ++printCount) {
-                if (!iterator.hasNext())
-                    break;
-                LogEntry logEntry = iterator.next();
+            int printCount = 0;
+            for (LogEntry logEntry : logEntries) {
                 printBuilder.append(logEntry.toString());
                 printBuilder.append("\n")
                         .append("================")
                         .append("\n");
+                ++printCount;
             }
-            printBuilder.append(String.format("Displayed the most recent %d items.", printCount));
+            printBuilder.append(String.format("Displayed the most recent %d items. " +
+                    "Use `/blame limit` to change your display limit.", printCount));
             PrintUtil.msgInfo(context, printBuilder.toString());
         }
     }

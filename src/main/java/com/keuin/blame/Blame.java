@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.keuin.blame.adapter.*;
 import com.keuin.blame.adapter.handler.PlaceBlockHandler;
 import com.keuin.blame.command.BlameBlockCommand;
+import com.keuin.blame.command.BlameLimitCommand;
 import com.keuin.blame.config.BlameConfig;
 import com.keuin.blame.lookup.LookupManager;
 import com.keuin.blame.util.PrintUtil;
@@ -96,24 +97,16 @@ public class Blame implements ModInitializer {
             @Override
             public void register(CommandDispatcher<ServerCommandSource> commandDispatcher, boolean b) {
                 commandDispatcher.register(
-                        CommandManager.literal("blame")
-                                .then(
-                                        CommandManager.literal("block")
-                                                .then(
-                                                        CommandManager.argument("x", IntegerArgumentType.integer())
-                                                                .then(
-                                                                        CommandManager.argument("y", IntegerArgumentType.integer())
-                                                                                .then(
-                                                                                        CommandManager.argument("z", IntegerArgumentType.integer())
-                                                                                                .then(
-                                                                                                        CommandManager.argument("world", StringArgumentType.greedyString())
-                                                                                                                .executes(BlameBlockCommand::run)
-                                                                                                )
-                                                                                )
-                                                                )
-                                                )
-                                )
-                );
+                        CommandManager.literal("blame").then(CommandManager.literal("block")
+                                .then(CommandManager.argument("x", IntegerArgumentType.integer())
+                                        .then(CommandManager.argument("y", IntegerArgumentType.integer())
+                                                .then(CommandManager.argument("z", IntegerArgumentType.integer())
+                                                        .then(CommandManager.argument("world", StringArgumentType.greedyString())
+                                                                .executes(BlameBlockCommand::blameBlock)))))));
+                commandDispatcher.register(
+                        CommandManager.literal("blame").then(CommandManager.literal("limit")
+                                .then(CommandManager.argument("limit", IntegerArgumentType.integer(1, 255))
+                                        .executes(BlameLimitCommand::setLimit))));
             }
         });
     }
