@@ -23,7 +23,7 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
 
     public static final EventHandler INSTANCE = new EventHandler();
 
-    private static final long MAX_DUPE_INTERVAL = 80; // （判定为重复的必要条件）最大间隔毫秒数
+    private static final long MAX_DUPE_INTERVAL = 100; // （判定为重复的必要条件）最大间隔毫秒数
 
     private LogEntry lastUseBlockEntry; //去重用
     private LogEntry lastUseEntityEntry;
@@ -45,7 +45,6 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
                 checkDuplication = true;
             }
         }
-        // 不检查重复，直接提交
         String worldString = MinecraftUtil.worldToString(world);
         String blockId = Registry.BLOCK.getId(world.getBlockState(blockHitResult.getBlockPos()).getBlock()).toString();
         LogEntry entry = LogEntryFactory.playerWithBlock(
@@ -64,9 +63,7 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
         }
         lastUseBlockEntry = entry;
         SubmitWorker.INSTANCE.submit(entry);
-//        PrintUtil.broadcast("use_block; block_id=" + blockId + "; world=" + worldString);
         // TODO: 增加判断，事件触发的时候用户不一定真正使用了方块（也可能是无效的动作）。放置方块的时候也会触发这个事件
-//        PrintUtil.broadcast(String.format("player %s use block %s", playerEntity.getName().getString(), world.getBlockState(blockHitResult.getBlockPos())));
     }
 
     @Override
@@ -82,8 +79,6 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
                 ActionType.BLOCK_PLACE
         );
         SubmitWorker.INSTANCE.submit(entry);
-//        PrintUtil.broadcast(String.format("place_block; world=%s, player_entity=%s, block_pos=%s, block_state=%s, block_entity=%s",
-//                world, playerEntity, blockPos, blockState, blockEntity));
     }
 
     @Override
@@ -99,8 +94,6 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
                 ActionType.BLOCK_BREAK
         );
         SubmitWorker.INSTANCE.submit(entry);
-//        PrintUtil.broadcast("break_block; block_id=" + blockId + "; world=" + worldString);
-//        PrintUtil.broadcast(String.format("player %s break block %s", playerEntity.getName().getString(), blockState));
     }
 
     @Override
@@ -116,8 +109,6 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
                 ActionType.ENTITY_ATTACK
         );
         SubmitWorker.INSTANCE.submit(entry);
-//        PrintUtil.broadcast("attack_entity; entity_id=" + entityId);
-//        PrintUtil.broadcast(String.format("player %s attack entity %s", playerEntity.getName().getString(), entity));
     }
 
     @Override
@@ -155,14 +146,22 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
         }
         lastUseEntityEntry = entry;
         SubmitWorker.INSTANCE.submit(entry);
-//        PrintUtil.broadcast("use_entity; entity_id=" + entityId);
         // TODO: 增加判断，无效的时候也会触发这个事件
-        // TODO: 增加cooldown，过滤掉两个相邻重复事件（时间间隔大概为20ms+）
-//        PrintUtil.broadcast(String.format("player %s use entity %s", playerEntity.getName().getString(), entity));
     }
 
     @Override
     public void onPlayerUseItem(PlayerEntity playerEntity, World world, Hand hand) {
+        boolean checkDuplication = false;
+        long ts = System.currentTimeMillis();
+        if (lastUseItemEntry != null && (ts - lastUseItemEntry.timeMillis) <= MAX_DUPE_INTERVAL) {
+            if (
+                    lastUseItemEntry.subjectPos.getX() == playerEntity.getX()
+                            && lastUseItemEntry.subjectPos.getY() == playerEntity.getY()
+                            && lastUseItemEntry.subjectPos.getZ() == playerEntity.getZ() // 快速判断，减小不相同导致的资源开销
+            ) {
+                checkDuplication = true;
+            }
+        }
         String itemId = Registry.ITEM.getId(playerEntity.getStackInHand(hand).getItem()).toString();
         LogEntry entry = LogEntryFactory.playerWithItem(
                 playerEntity,
@@ -170,10 +169,15 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
                 itemId,
                 ActionType.ITEM_USE
         );
+        if (checkDuplication) {
+            LogEntry alignedEntry = new LogEntry(lastUseItemEntry);
+            alignedEntry.timeMillis = entry.timeMillis;
+            if (Objects.equals(alignedEntry, entry)) {
+                return;
+            }
+        }
+        lastUseItemEntry = entry;
         SubmitWorker.INSTANCE.submit(entry);
-//        PrintUtil.broadcast("use_item; item_id=" + itemId);
-        // TODO: 增加cooldown，过滤掉两个相邻重复事件（时间间隔大概为20ms+）
-//        PrintUtil.broadcast(String.format("player %s use item %s", playerEntity.getName().getString(), playerEntity.getStackInHand(hand)));
     }
 
 }
