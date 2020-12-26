@@ -1,5 +1,7 @@
 package com.keuin.blame.util;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import com.keuin.blame.Blame;
 import com.keuin.blame.config.MongoConfig;
 import com.keuin.blame.data.enums.codec.ActionTypeCodec;
@@ -10,6 +12,7 @@ import com.mongodb.MongoClientSettings;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
+import org.slf4j.LoggerFactory;
 
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 
@@ -34,4 +37,8 @@ public class DatabaseUtil {
     //   db.log.createIndex({ timestamp_millis: -1 })
     //   db.log.createIndex({ timestamp_millis: -1, object_id: "hashed" })
     //   db.log.createIndex({ timestamp_millis: -1, subject_id: "hashed" })
+
+    public static void disableMongoSpamming() {
+        ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("org.mongodb.driver").setLevel(Level.ERROR);
+    }
 }
