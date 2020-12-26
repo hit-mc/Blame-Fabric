@@ -7,6 +7,7 @@ import com.keuin.blame.command.BlameBlockCommand;
 import com.keuin.blame.command.BlameLimitCommand;
 import com.keuin.blame.config.BlameConfig;
 import com.keuin.blame.lookup.LookupManager;
+import com.keuin.blame.util.DatabaseUtil;
 import com.keuin.blame.util.PrintUtil;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -18,20 +19,16 @@ import net.fabricmc.fabric.api.event.player.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
-import org.apache.logging.log4j.core.LoggerContext;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Blame implements ModInitializer {
 
-    private static final Logger logger = Logger.getLogger(Blame.class.getName());
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Blame.class.getName());
 
     public static BlameConfig config;
 
@@ -55,12 +52,7 @@ public class Blame implements ModInitializer {
         return true;
     }
 
-    private static void disableMongoSpamming() {
-        Logger mongoLogger = Logger.getLogger("org.mongodb.driver");
-        mongoLogger.setLevel(Level.SEVERE);
-        ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("org.mongodb.driver")
-                .setLevel(org.apache.logging.log4j.Level.ERROR);
-    }
+
 
     private static void upgradeOldLogEntries() {
 //        try (final MongoClient mongoClient = MongoClients.create(DatabaseUtil.CLIENT_SETTINGS)) {
@@ -97,7 +89,7 @@ public class Blame implements ModInitializer {
         if (!loadConfig())
             return;
 
-        disableMongoSpamming();
+        DatabaseUtil.disableMongoSpamming();
 
         // hook disable event
         ServerLifecycleEvents.SERVER_STOPPING.register(new ServerLifecycleEvents.ServerStopping() {
