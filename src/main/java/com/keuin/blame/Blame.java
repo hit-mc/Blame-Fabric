@@ -58,6 +58,24 @@ public class Blame implements ModInitializer {
         mongoLogger.setLevel(Level.WARNING);
     }
 
+    private static void upgradeOldLogEntries() {
+//        try (final MongoClient mongoClient = MongoClients.create(DatabaseUtil.CLIENT_SETTINGS)) {
+//            final MongoDatabase db = mongoClient.getDatabase(
+//                    DatabaseUtil.MONGO_CONFIG.getDatabaseName()
+//            );
+//            final MongoCollection<LogEntry> collection = db.getCollection(
+//                    DatabaseUtil.MONGO_CONFIG.getLogCollectionName(), LogEntry.class
+//            );
+//            FindIterable<LogEntry> iterable =
+//                    collection.find(Filters.ne(LogEntryNames.VERSION, TransformerManager.LATEST_VERSION));
+//            List<LogEntry>
+//            for (LogEntry logEntry : iterable) {
+//                iterable.batchSize(100).
+//            }
+//
+//        }
+    }
+
     @Override
     public void onInitialize() {
         // This code runs as soon as Minecraft is in a mod-load-ready state.
@@ -102,7 +120,7 @@ public class Blame implements ModInitializer {
                                         .then(CommandManager.argument("y", IntegerArgumentType.integer())
                                                 .then(CommandManager.argument("z", IntegerArgumentType.integer())
                                                         .then(CommandManager.argument("world", StringArgumentType.greedyString())
-                                                                .executes(BlameBlockCommand::blameBlock)))))));
+                                                                .executes(BlameBlockCommand::blameGivenBlockPos)))))));
                 commandDispatcher.register(
                         CommandManager.literal("blame").then(CommandManager.literal("limit")
                                 .then(CommandManager.argument("limit", IntegerArgumentType.integer(1, 255))

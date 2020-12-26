@@ -1,6 +1,6 @@
 package com.keuin.blame.data.entry;
 
-public class LogEntryNamesV1 {
+public class LogEntryNames {
     public static final String VERSION = "version";
     public static final String GAME_VERSION = "game_version";
     public static final String TIMESTAMP_MILLIS = "timestamp_millis";
@@ -11,4 +11,5 @@ public class LogEntryNamesV1 {
     public static final String OBJECT_TYPE = "object_type";
     public static final String OBJECT_ID = "object_id";
     public static final String OBJECT_POS = "object_pos";
+    public static final String RADIUS = "radius";
 }

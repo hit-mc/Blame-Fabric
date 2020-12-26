@@ -11,7 +11,7 @@ import org.bson.codecs.pojo.annotations.BsonProperty;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com.keuin.blame.data.entry.LogEntryNamesV1.*;
+import static com.keuin.blame.data.entry.LogEntryNames.*;
 
 public class LogEntry {
 
@@ -69,6 +69,9 @@ public class LogEntry {
 
     @BsonProperty(OBJECT_POS)
     public WorldPos objectPos = WorldPos.NULL_POS;
+
+    @BsonProperty(RADIUS)
+    public double radius = 0;
 
     public LogEntry() {
     }

@@ -16,8 +16,7 @@ import static com.keuin.blame.command.Commands.SUCCESS;
 
 public class BlameBlockCommand {
 
-
-    public static int blameBlock(CommandContext<ServerCommandSource> context) {
+    public static int blameGivenBlockPos(CommandContext<ServerCommandSource> context) {
         Entity entity = context.getSource().getEntity();
         if (!(entity instanceof ServerPlayerEntity)) {
             // can only be executed by player
@@ -36,6 +35,10 @@ public class BlameBlockCommand {
                 new Callback(context),
                 BlameLimitCommand.getLookupLimit(playerEntity.getUuid())
         );
+        return SUCCESS;
+    }
+
+    public static int blameGivenBlockRange(CommandContext<ServerCommandSource> context) {
         return SUCCESS;
     }
 
@@ -63,4 +66,5 @@ public class BlameBlockCommand {
             PrintUtil.msgInfo(context, printBuilder.toString());
         }
     }
+
 }
