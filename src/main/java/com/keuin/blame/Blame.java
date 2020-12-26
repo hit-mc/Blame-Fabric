@@ -18,6 +18,8 @@ import net.fabricmc.fabric.api.event.player.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,7 +57,9 @@ public class Blame implements ModInitializer {
 
     private static void disableMongoSpamming() {
         Logger mongoLogger = Logger.getLogger("org.mongodb.driver");
-        mongoLogger.setLevel(Level.WARNING);
+        mongoLogger.setLevel(Level.SEVERE);
+        ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("org.mongodb.driver")
+                .setLevel(org.apache.logging.log4j.Level.ERROR);
     }
 
     private static void upgradeOldLogEntries() {
@@ -66,11 +70,19 @@ public class Blame implements ModInitializer {
 //            final MongoCollection<LogEntry> collection = db.getCollection(
 //                    DatabaseUtil.MONGO_CONFIG.getLogCollectionName(), LogEntry.class
 //            );
+//            collection.updateMany()
 //            FindIterable<LogEntry> iterable =
-//                    collection.find(Filters.ne(LogEntryNames.VERSION, TransformerManager.LATEST_VERSION));
-//            List<LogEntry>
+//                    collection.find(Filters.ne(LogEntryNames.VERSION, TransformerManager.LATEST_VERSION))
+//                    .showRecordId(true);
 //            for (LogEntry logEntry : iterable) {
-//                iterable.batchSize(100).
+//                if (logEntry.version > TransformerManager.LATEST_VERSION) {
+//                    logger.warning("Detected a newer entry in the database! " +
+//                            "Downgrading of Blame is not supported and may cause " +
+//                            "unexpected behaviour.");
+//                    continue;
+//                }
+//
+//                collection.updateOne(iterable.showRecordId())
 //            }
 //
 //        }
