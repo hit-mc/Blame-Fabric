@@ -1,5 +1,6 @@
 package com.keuin.blame.command;
 
+import com.google.common.base.Strings;
 import com.keuin.blame.data.entry.LogEntry;
 import com.keuin.blame.data.helper.VersionedLogEntryHelper;
 import com.keuin.blame.util.DatabaseUtil;
@@ -21,22 +22,23 @@ public class BlameStatCommand {
     private static final Logger logger = Logger.getLogger(BlameStatCommand.class.getName());
 
     public static int showStat(CommandContext<ServerCommandSource> context) {
+        PrintUtil.msgInfo(context, "Collecting statistics. This may take a few seconds...");
         showStat(new ShowStatCallback() {
             @Override
             public void showStat(@Nullable BlameStat stat) {
                 StringBuilder sb = new StringBuilder();
                 if (stat != null) {
-                    sb.append("Data statistics\n");
-                    sb.append("===============\n");
-                    sb.append("\n");
+                    sb.append("Statistics\n");
+                    sb.append("====\n");
                     sb.append("# Count by subjects\n");
                     stat.getCountMap().forEach((subjectId, count) -> {
-                        sb.append(subjectId).append(": ").append(count).append("\n");
+                        sb.append("<").append(
+                                Optional.ofNullable(Strings.emptyToNull(subjectId)).orElse("null")
+                        ).append(">: ").append(count).append("\n");
                     });
-                    sb.append("\n");
-                    sb.append("=== END ===\n");
+                    sb.append("=== END ===");
                 } else {
-                    sb.append("Failed to get statistics. Please refer to server log for more information.\n");
+                    sb.append("Failed to get statistics. Please refer to server log for more information.");
                 }
                 PrintUtil.msgInfo(context, sb.toString());
             }
@@ -74,7 +76,7 @@ public class BlameStatCommand {
                     callback.showStat(null);
                 }
             }
-        }).start();
+        }, "BlameStatCommandThread").start();
     }
 
     public static class BlameStat {
