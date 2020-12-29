@@ -11,5 +11,5 @@ public class LogEntryNames {
     public static final String OBJECT_TYPE = "object_type";
     public static final String OBJECT_ID = "object_id";
     public static final String OBJECT_POS = "object_pos";
-    public static final String RADIUS = "radius";
+    public static final String RADIUS = "object_radius";
 }

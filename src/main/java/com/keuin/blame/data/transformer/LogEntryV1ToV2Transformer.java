@@ -1,7 +1,7 @@
 package com.keuin.blame.data.transformer;
 
-import com.keuin.blame.data.WorldPos;
 import com.keuin.blame.data.entry.LogEntry;
+import com.keuin.blame.util.MinecraftUtil;
 
 public class LogEntryV1ToV2Transformer extends AbstractLogEntryTransformer {
 
@@ -24,11 +24,8 @@ public class LogEntryV1ToV2Transformer extends AbstractLogEntryTransformer {
         entryV2.objectType = entry.objectType;
         entryV2.objectId = entry.objectId;
         entryV2.objectPos = entry.objectPos;
-        entryV2.radius = getRadius(entry.objectPos);
+        entryV2.radius = MinecraftUtil.getRadius(entry.objectPos);
         return entryV2;
     }
 
-    private static double getRadius(WorldPos objectPos) {
-        return Math.sqrt(Math.pow(objectPos.getX(), 2) + Math.pow(objectPos.getY(), 2) + Math.pow(objectPos.getZ(), 2));
-    }
 }

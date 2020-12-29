@@ -3,6 +3,7 @@ package com.keuin.blame.data.entry;
 import com.keuin.blame.data.WorldPos;
 import com.keuin.blame.data.enums.ActionType;
 import com.keuin.blame.data.enums.ObjectType;
+import com.keuin.blame.util.MinecraftUtil;
 import com.keuin.blame.util.PrettyUtil;
 import com.keuin.blame.util.UuidUtils;
 import net.minecraft.MinecraftVersion;
@@ -88,6 +89,7 @@ public class LogEntry {
         this.objectType = entry.objectType;
         this.objectId = entry.objectId;
         this.objectPos = entry.objectPos;
+        this.radius = entry.radius;
     }
 
     public LogEntry(long timeMillis, String subjectId, UUID subjectUUID, WorldPos subjectPos, ActionType actionType, ObjectType objectType, String objectId, WorldPos objectPos) {
@@ -106,6 +108,7 @@ public class LogEntry {
         if (objectPos == null)
             throw new IllegalArgumentException("objectPos cannot be null");
 
+        // v1 params
         this.subjectId = subjectId;
         this.timeMillis = timeMillis;
         this.subjectUUID = subjectUUID;
@@ -114,6 +117,9 @@ public class LogEntry {
         this.objectType = objectType;
         this.objectId = objectId;
         this.objectPos = objectPos;
+
+        // v2 params
+        this.radius = MinecraftUtil.getRadius(objectPos);
     }
 
     @Override
