@@ -1,9 +1,12 @@
-# Fabric Example Mod
+# Blame
 
-## Setup
+When you find something has been messed up in the Minecraft server you're managing, then who to blame?
 
-For setup instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
+*Blame* records players' interactions with blocks and entities, thus enabling you to find out the unruly player.
 
-## License
+## Usage
 
-This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
+- Install MongoDB
+- Configure your database in `blame.json` sitting with the server `.jar` file
+- Start your server
+- Use command `/blame` to look up the history
