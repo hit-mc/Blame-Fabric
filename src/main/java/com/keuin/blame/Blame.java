@@ -26,10 +26,11 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.logging.Logger;
 
 public class Blame implements ModInitializer {
 
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Blame.class.getName());
+    private static final Logger logger = Logger.getLogger(Blame.class.getName());
 
     public static BlameConfig config;
 
@@ -51,34 +52,6 @@ public class Blame implements ModInitializer {
             return false;
         }
         return true;
-    }
-
-
-
-    private static void upgradeOldLogEntries() {
-//        try (final MongoClient mongoClient = MongoClients.create(DatabaseUtil.CLIENT_SETTINGS)) {
-//            final MongoDatabase db = mongoClient.getDatabase(
-//                    DatabaseUtil.MONGO_CONFIG.getDatabaseName()
-//            );
-//            final MongoCollection<LogEntry> collection = db.getCollection(
-//                    DatabaseUtil.MONGO_CONFIG.getLogCollectionName(), LogEntry.class
-//            );
-//            collection.updateMany()
-//            FindIterable<LogEntry> iterable =
-//                    collection.find(Filters.ne(LogEntryNames.VERSION, TransformerManager.LATEST_VERSION))
-//                    .showRecordId(true);
-//            for (LogEntry logEntry : iterable) {
-//                if (logEntry.version > TransformerManager.LATEST_VERSION) {
-//                    logger.warning("Detected a newer entry in the database! " +
-//                            "Downgrading of Blame is not supported and may cause " +
-//                            "unexpected behaviour.");
-//                    continue;
-//                }
-//
-//                collection.updateOne(iterable.showRecordId())
-//            }
-//
-//        }
     }
 
     @Override
@@ -134,7 +107,7 @@ public class Blame implements ModInitializer {
                 );
                 commandDispatcher.register(
                         CommandManager.literal("blame").then(CommandManager.literal("stat")
-                        .executes(BlameStatCommand::showStat))
+                                .executes(BlameStatCommand::showStat))
                 );
             }
         });

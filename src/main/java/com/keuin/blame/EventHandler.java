@@ -64,9 +64,7 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
         }
         lastUseBlockEntry = entry;
         SubmitWorker.INSTANCE.submit(entry);
-//        PrintUtil.broadcast("use_block; block_id=" + blockId + "; world=" + worldString);
         // TODO: 增加判断，事件触发的时候用户不一定真正使用了方块（也可能是无效的动作）。放置方块的时候也会触发这个事件
-//        PrintUtil.broadcast(String.format("player %s use block %s", playerEntity.getName().getString(), world.getBlockState(blockHitResult.getBlockPos())));
     }
 
     @Override
@@ -82,8 +80,6 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
                 ActionType.BLOCK_PLACE
         );
         SubmitWorker.INSTANCE.submit(entry);
-//        PrintUtil.broadcast(String.format("place_block; world=%s, player_entity=%s, block_pos=%s, block_state=%s, block_entity=%s",
-//                world, playerEntity, blockPos, blockState, blockEntity));
     }
 
     @Override
@@ -99,8 +95,6 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
                 ActionType.BLOCK_BREAK
         );
         SubmitWorker.INSTANCE.submit(entry);
-//        PrintUtil.broadcast("break_block; block_id=" + blockId + "; world=" + worldString);
-//        PrintUtil.broadcast(String.format("player %s break block %s", playerEntity.getName().getString(), blockState));
     }
 
     @Override
@@ -116,8 +110,6 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
                 ActionType.ENTITY_ATTACK
         );
         SubmitWorker.INSTANCE.submit(entry);
-//        PrintUtil.broadcast("attack_entity; entity_id=" + entityId);
-//        PrintUtil.broadcast(String.format("player %s attack entity %s", playerEntity.getName().getString(), entity));
     }
 
     @Override
@@ -155,10 +147,8 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
         }
         lastUseEntityEntry = entry;
         SubmitWorker.INSTANCE.submit(entry);
-//        PrintUtil.broadcast("use_entity; entity_id=" + entityId);
         // TODO: 增加判断，无效的时候也会触发这个事件
-        // TODO: 增加cooldown，过滤掉两个相邻重复事件（时间间隔大概为20ms+）
-//        PrintUtil.broadcast(String.format("player %s use entity %s", playerEntity.getName().getString(), entity));
+        // TODO: 增加cool down，过滤掉两个相邻重复事件（时间间隔大概为20ms+）
     }
 
     @Override
@@ -171,9 +161,7 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
                 ActionType.ITEM_USE
         );
         SubmitWorker.INSTANCE.submit(entry);
-//        PrintUtil.broadcast("use_item; item_id=" + itemId);
-        // TODO: 增加cooldown，过滤掉两个相邻重复事件（时间间隔大概为20ms+）
-//        PrintUtil.broadcast(String.format("player %s use item %s", playerEntity.getName().getString(), playerEntity.getStackInHand(hand)));
+        // TODO: 增加cool down，过滤掉两个相邻重复事件（时间间隔大概为20ms+）
     }
 
 }

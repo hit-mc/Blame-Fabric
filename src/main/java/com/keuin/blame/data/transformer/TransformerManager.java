@@ -8,10 +8,11 @@ import java.util.Objects;
 
 public class TransformerManager {
 
-    public static int LATEST_VERSION = 2;
+    public static final int LATEST_VERSION = 2;
 
     private static final Map<Integer, AbstractLogEntryTransformer> transformerMap = new HashMap<>();
 
+    @SuppressWarnings("SameParameterValue")
     static void setTransformer(int baseVersion, AbstractLogEntryTransformer transformer) {
         transformerMap.put(baseVersion, transformer);
     }

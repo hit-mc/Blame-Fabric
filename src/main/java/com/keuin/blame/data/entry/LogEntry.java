@@ -146,20 +146,18 @@ public class LogEntry {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Time: ").append(PrettyUtil.timestampToString(timeMillis)).append("\n");
-        builder.append("Subject: ").append(subjectId).append("{").append(subjectUUID).append("}@")
-                .append(subjectPos.toString())
-                .append("\n");
-        builder.append("Action: ").append(actionType.toString()).append("\n");
-        builder.append("Object: ").append(objectType.toString()).append("[").append(objectId).append("]@")
-                .append(objectPos.toString())
-                .append("\n");
-        builder.append("(entryVersion: ")
-                .append(version)
-                .append(", gameVersion:")
-                .append(gameVersion)
-                .append(")");
-        return builder.toString();
+        return "Time: " + PrettyUtil.timestampToString(timeMillis) + "\n" +
+                "Subject: " + subjectId + "{" + subjectUUID + "}@" +
+                subjectPos.toString() +
+                "\n" +
+                "Action: " + actionType.toString() + "\n" +
+                "Object: " + objectType.toString() + "[" + objectId + "]@" +
+                objectPos.toString() +
+                "\n" +
+                "(entryVersion: " +
+                version +
+                ", gameVersion:" +
+                gameVersion +
+                ")";
     }
 }

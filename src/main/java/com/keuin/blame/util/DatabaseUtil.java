@@ -1,8 +1,5 @@
 package com.keuin.blame.util;
 
-//import ch.qos.logback.classic.Level;
-//import ch.qos.logback.classic.LoggerContext;
-
 import com.keuin.blame.Blame;
 import com.keuin.blame.config.MongoConfig;
 import com.keuin.blame.data.enums.codec.ActionTypeCodec;
@@ -43,7 +40,7 @@ public class DatabaseUtil {
 
     public static void disableMongoSpamming() {
 //        ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("org.mongodb.driver").setLevel(Level.ERROR);
-        String[] mongoDrivers = new String[] {"org.mongodb", "org.mongodb.driver", "org.mongodb.driver.cluster", "org.mongodb.driver.connection"};
+        String[] mongoDrivers = new String[]{"org.mongodb", "org.mongodb.driver", "org.mongodb.driver.cluster", "org.mongodb.driver.connection"};
         for (String driverName : mongoDrivers) {
             Logger mongoLogger = Logger.getLogger(driverName);
             mongoLogger.setLevel(Level.OFF); // Plz be silent, my boy.

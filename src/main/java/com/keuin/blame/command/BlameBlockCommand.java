@@ -14,6 +14,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import static com.keuin.blame.command.Commands.FAILED;
 import static com.keuin.blame.command.Commands.SUCCESS;
 
+@SuppressWarnings("SameReturnValue")
 public class BlameBlockCommand {
 
     public static int blameGivenBlockPos(CommandContext<ServerCommandSource> context) {
@@ -38,6 +39,7 @@ public class BlameBlockCommand {
         return SUCCESS;
     }
 
+    // TODO
     public static int blameGivenBlockRange(CommandContext<ServerCommandSource> context) {
         return SUCCESS;
     }
