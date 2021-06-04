@@ -5,6 +5,7 @@ import com.keuin.blame.data.entry.LogEntry;
 import com.keuin.blame.lookup.BlockPosLookupFilter;
 import com.keuin.blame.lookup.LookupCallback;
 import com.keuin.blame.lookup.LookupManager;
+import com.keuin.blame.util.MinecraftUtil;
 import com.keuin.blame.util.PrettyUtil;
 import com.keuin.blame.util.PrintUtil;
 import com.mojang.brigadier.context.CommandContext;
@@ -37,9 +38,15 @@ public class BlameBlockCommand {
         int x = pos.getX();
         int y = pos.getY();
         int z = pos.getZ();
-        Identifier world = context.getArgument("world", Identifier.class);
+
+        String world;
+        try {
+            world = context.getArgument("world", Identifier.class).toString();
+        } catch (IllegalArgumentException e) {
+            world = MinecraftUtil.worldToString(entity.world);
+        }
 //        String world = MinecraftUtil.worldToString(playerEntity.world);
-        WorldPos blockPos = new WorldPos(world.toString(), x, y, z);
+        WorldPos blockPos = new WorldPos(world, x, y, z);
         LookupManager.INSTANCE.lookup(
                 new BlockPosLookupFilter(blockPos),
                 new Callback(context),

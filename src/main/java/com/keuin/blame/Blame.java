@@ -89,6 +89,7 @@ public class Blame implements ModInitializer {
             commandDispatcher.register(
                     CommandManager.literal("blame").then(CommandManager.literal("block")
                             .then(CommandManager.argument("pos", BlockPosArgumentType.blockPos())
+                                    .executes(BlameBlockCommand::blameGivenBlockPos)
                                     .then(CommandManager.argument("world", DimensionArgumentType.dimension())
                                             .executes(BlameBlockCommand::blameGivenBlockPos))))
             );
