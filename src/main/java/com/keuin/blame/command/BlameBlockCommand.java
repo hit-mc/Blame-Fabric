@@ -5,6 +5,7 @@ import com.keuin.blame.data.entry.LogEntry;
 import com.keuin.blame.lookup.BlockPosLookupFilter;
 import com.keuin.blame.lookup.LookupCallback;
 import com.keuin.blame.lookup.LookupManager;
+import com.keuin.blame.util.PrettyUtil;
 import com.keuin.blame.util.PrintUtil;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -12,6 +13,7 @@ import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
@@ -61,18 +63,31 @@ public class BlameBlockCommand {
 
         @Override
         public void onLookupFinishes(Iterable<LogEntry> logEntries) {
-            StringBuilder printBuilder = new StringBuilder();
             int printCount = 0;
+            PrintUtil.Printer printer = PrintUtil.newPrinter();
+            boolean isFirst = true;
             for (LogEntry logEntry : logEntries) {
-                printBuilder.append(logEntry.toString());
-                printBuilder.append("\n")
-                        .append("================")
-                        .append("\n");
+                if (!isFirst)
+                    printer.append("\n");
+                printer.append(Formatting.YELLOW, "Time: ", PrettyUtil.timestampToString(logEntry.timeMillis), "\n")
+                        .append(Formatting.YELLOW, "Subject: ", Formatting.AQUA, logEntry.subjectId, "{", logEntry.subjectUUID, "} @ ", logEntry.subjectPos, "\n")
+                        .append(Formatting.YELLOW, "Action: ", Formatting.AQUA, logEntry.actionType, "\n")
+                        .append(Formatting.YELLOW, "Object: ", Formatting.AQUA, logEntry.objectType, "[", logEntry.objectId, "] @ ", logEntry.objectPos, "\n")
+                        .append(Formatting.YELLOW, "Log version: ", logEntry.version, "\n")
+                        .append(Formatting.YELLOW, "Game version: ", logEntry.gameVersion, "\n")
+                        .append("================");
                 ++printCount;
+                isFirst = false;
             }
-            printBuilder.append(String.format("Displayed the most recent %d items. " +
-                    "Use `/blame limit` to change your display limit.", printCount));
-            PrintUtil.msgInfo(context, printBuilder.toString());
+            if (printCount > 0) {
+                printer.sendTo(context);
+                PrintUtil.message(context,
+                        "Showed " + printCount + " event items. ",
+                        Formatting.ITALIC,
+                        "Use `/blame limit` to change print count limit.");
+            } else {
+                PrintUtil.message(context, "No logs found.");
+            }
         }
     }
 

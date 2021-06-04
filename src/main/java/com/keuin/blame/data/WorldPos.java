@@ -57,7 +57,7 @@ public class WorldPos {
 
     @Override
     public String toString() {
-        return String.format("(%s, %s, %s -> %s)", prettyDouble(x), prettyDouble(y), prettyDouble(z), world);
+        return String.format("(%s, %s, %s, %s)", prettyDouble(x), prettyDouble(y), prettyDouble(z), world);
     }
 
     private String prettyDouble(double d) {

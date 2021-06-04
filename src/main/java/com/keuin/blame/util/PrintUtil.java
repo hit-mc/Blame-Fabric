@@ -1,16 +1,19 @@
 package com.keuin.blame.util;
 
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.keuin.blame.util.UuidUtils.UUID_NULL;
 
@@ -133,6 +136,52 @@ public final class PrintUtil implements ServerLifecycleEvents.ServerStarted {
      */
     public static void error(String string) {
         LOGGER.error(LOG_HEADING + " " + string);
+    }
+
+    public static void message(CommandContext<ServerCommandSource> context, Object... objects) {
+        new Printer().append(objects).sendTo(context);
+    }
+
+    public static Printer newPrinter() {
+        return new Printer();
+    }
+
+    public static class Printer {
+        private final BaseText message = new LiteralText("");
+        public Printer() {
+        }
+
+        public Printer append(Object... objects) {
+            Style currentStyle = null; // accumulated style appended with a text
+            for (Object obj : objects) {
+                if (obj instanceof Formatting) {
+                    currentStyle = Optional.ofNullable(currentStyle).orElse(Style.EMPTY)
+                            .withFormatting((Formatting) obj);
+                } else if (obj != null) {
+                    if (!(obj instanceof String))
+                        obj = obj.toString();
+                    message.append(new LiteralText((String) obj)
+                            .setStyle(Optional.ofNullable(currentStyle).orElse(Style.EMPTY)));
+                    currentStyle = null;
+                }
+            }
+            if (currentStyle != null)
+                throw new IllegalStateException("parameter with type Formatting must be appended " +
+                        "with a BaseText-like object");
+            return this;
+        }
+
+        public void sendTo(Consumer<Text> receiver) {
+            receiver.accept(message);
+        }
+
+        public void sendTo(CommandContext<ServerCommandSource> context) {
+            try {
+                context.getSource().getPlayer().sendSystemMessage(message, UUID_NULL);
+            } catch (CommandSyntaxException e) {
+                throw new IllegalArgumentException("CommandContext must be of a player");
+            }
+        }
     }
 
 }

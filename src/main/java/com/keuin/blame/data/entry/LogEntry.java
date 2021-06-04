@@ -77,7 +77,7 @@ public class LogEntry {
     public LogEntry() {
     }
 
-    // 拷贝构造器
+    // copy constructor
     public LogEntry(LogEntry entry) {
         this.version = entry.version;
         this.gameVersion = entry.gameVersion;
