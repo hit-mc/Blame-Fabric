@@ -38,7 +38,8 @@ public class Blame implements ModInitializer {
             // load config
             File configFile = new File(configFileName);
             if (!configFile.exists()) {
-                logger.severe(String.format("Failed to read configuration file %s. Blame will be disabled.", configFileName));
+                logger.severe(String.format("Configuration file %s does not exist. " +
+                        "Blame will be disabled.", configFileName));
                 return false;
             }
 
@@ -46,7 +47,7 @@ public class Blame implements ModInitializer {
             config = (new Gson()).fromJson(reader, BlameConfig.class);
         } catch (IOException exception) {
             logger.severe(String.format("Failed to read configuration file %s: %s. " +
-                    "Blame will be disabled.", configFileName, exception));
+                    "Blame will be disabled.", configFileName, exception.getMessage()));
             return false;
         }
         return true;
@@ -64,15 +65,12 @@ public class Blame implements ModInitializer {
         DatabaseUtil.disableMongoSpamming();
 
         // hook disable event
-        ServerLifecycleEvents.SERVER_STOPPING.register(new ServerLifecycleEvents.ServerStopping() {
-            @Override
-            public void onServerStopping(MinecraftServer minecraftServer) {
-                logger.info("Stopping LookupManager...");
-                LookupManager.INSTANCE.stop();
+        ServerLifecycleEvents.SERVER_STOPPING.register(minecraftServer -> {
+            logger.info("Stopping LookupManager...");
+            LookupManager.INSTANCE.stop();
 
-                logger.info("Stopping SubmitWorker...");
-                SubmitWorker.INSTANCE.stop();
-            }
+            logger.info("Stopping SubmitWorker...");
+            SubmitWorker.INSTANCE.stop();
         });
 
         // hook game events
