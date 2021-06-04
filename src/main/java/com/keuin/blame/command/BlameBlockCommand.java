@@ -7,9 +7,13 @@ import com.keuin.blame.lookup.LookupCallback;
 import com.keuin.blame.lookup.LookupManager;
 import com.keuin.blame.util.PrintUtil;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 
 import static com.keuin.blame.command.Commands.FAILED;
 import static com.keuin.blame.command.Commands.SUCCESS;
@@ -17,7 +21,9 @@ import static com.keuin.blame.command.Commands.SUCCESS;
 @SuppressWarnings("SameReturnValue")
 public class BlameBlockCommand {
 
-    public static int blameGivenBlockPos(CommandContext<ServerCommandSource> context) {
+    public static int blameGivenBlockPos(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        // pos
+        // world
         Entity entity = context.getSource().getEntity();
         if (!(entity instanceof ServerPlayerEntity)) {
             // can only be executed by player
@@ -25,12 +31,13 @@ public class BlameBlockCommand {
         }
 
         ServerPlayerEntity playerEntity = (ServerPlayerEntity) entity;
-        int x = context.getArgument("x", Integer.class);
-        int y = context.getArgument("y", Integer.class);
-        int z = context.getArgument("z", Integer.class);
-        String world = context.getArgument("world", String.class);
+        BlockPos pos = BlockPosArgumentType.getLoadedBlockPos(context, "pos");
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
+        Identifier world = context.getArgument("world", Identifier.class);
 //        String world = MinecraftUtil.worldToString(playerEntity.world);
-        WorldPos blockPos = new WorldPos(world, x, y, z);
+        WorldPos blockPos = new WorldPos(world.toString(), x, y, z);
         LookupManager.INSTANCE.lookup(
                 new BlockPosLookupFilter(blockPos),
                 new Callback(context),

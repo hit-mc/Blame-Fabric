@@ -10,16 +10,14 @@ import com.keuin.blame.config.BlameConfig;
 import com.keuin.blame.lookup.LookupManager;
 import com.keuin.blame.util.DatabaseUtil;
 import com.keuin.blame.util.PrintUtil;
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.player.*;
-import net.minecraft.server.MinecraftServer;
+import net.minecraft.command.argument.BlockPosArgumentType;
+import net.minecraft.command.argument.DimensionArgumentType;
 import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,27 +87,22 @@ public class Blame implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTED.register(PrintUtil.INSTANCE);
 
         // register
-        CommandRegistrationCallback.EVENT.register(new CommandRegistrationCallback() {
-            @Override
-            public void register(CommandDispatcher<ServerCommandSource> commandDispatcher, boolean b) {
-                commandDispatcher.register(
-                        CommandManager.literal("blame").then(CommandManager.literal("block")
-                                .then(CommandManager.argument("x", IntegerArgumentType.integer())
-                                        .then(CommandManager.argument("y", IntegerArgumentType.integer())
-                                                .then(CommandManager.argument("z", IntegerArgumentType.integer())
-                                                        .then(CommandManager.argument("world", StringArgumentType.greedyString())
-                                                                .executes(BlameBlockCommand::blameGivenBlockPos))))))
-                );
-                commandDispatcher.register(
-                        CommandManager.literal("blame").then(CommandManager.literal("limit")
-                                .then(CommandManager.argument("limit", IntegerArgumentType.integer(1, 255))
-                                        .executes(BlameLimitCommand::setLimit)))
-                );
-                commandDispatcher.register(
-                        CommandManager.literal("blame").then(CommandManager.literal("stat")
-                                .executes(BlameStatCommand::showStat))
-                );
-            }
+        CommandRegistrationCallback.EVENT.register((commandDispatcher, b) -> {
+            commandDispatcher.register(
+                    CommandManager.literal("blame").then(CommandManager.literal("block")
+                            .then(CommandManager.argument("pos", BlockPosArgumentType.blockPos())
+                                    .then(CommandManager.argument("world", DimensionArgumentType.dimension())
+                                            .executes(BlameBlockCommand::blameGivenBlockPos))))
+            );
+            commandDispatcher.register(
+                    CommandManager.literal("blame").then(CommandManager.literal("limit")
+                            .then(CommandManager.argument("limit", IntegerArgumentType.integer(1, 255))
+                                    .executes(BlameLimitCommand::setLimit)))
+            );
+            commandDispatcher.register(
+                    CommandManager.literal("blame").then(CommandManager.literal("stat")
+                            .executes(BlameStatCommand::showStat))
+            );
         });
     }
 }
