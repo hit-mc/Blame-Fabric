@@ -1,13 +1,7 @@
 package com.keuin.blame.lookup;
 
-import com.keuin.blame.data.entry.LogEntry;
-import com.mongodb.client.FindIterable;
+import org.bson.conversions.Bson;
 
-public abstract class AbstractLookupFilter {
-    // immutable
-
-    AbstractLookupFilter() {
-    }
-
-    abstract FindIterable<LogEntry> find(FindIterable<LogEntry> iterable);
+public interface AbstractLookupFilter {
+    abstract Bson filter();
 }

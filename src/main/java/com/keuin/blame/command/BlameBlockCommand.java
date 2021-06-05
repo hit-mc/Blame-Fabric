@@ -2,12 +2,12 @@ package com.keuin.blame.command;
 
 import com.keuin.blame.data.WorldPos;
 import com.keuin.blame.data.entry.LogEntry;
-import com.keuin.blame.lookup.BlockPosLookupFilter;
-import com.keuin.blame.lookup.LookupCallback;
-import com.keuin.blame.lookup.LookupManager;
+import com.keuin.blame.lookup.*;
 import com.keuin.blame.util.MinecraftUtil;
 import com.keuin.blame.util.PrettyUtil;
 import com.keuin.blame.util.PrintUtil;
+import com.mojang.brigadier.arguments.LongArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.command.argument.BlockPosArgumentType;
@@ -18,11 +18,25 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import static com.keuin.blame.command.Commands.FAILED;
 import static com.keuin.blame.command.Commands.SUCCESS;
 
 @SuppressWarnings("SameReturnValue")
 public class BlameBlockCommand {
+
+    public static final Map<String, Integer> timeUnitAmplifierMap = Collections
+            .unmodifiableMap(new HashMap<String, Integer>() {{
+                put("second", 1);
+                put("minute", 60);
+                put("hour", 3600);
+                put("day", 86400);
+            }});
+    public static final Set<String> timeUnits = timeUnitAmplifierMap.keySet();
 
     public static int blameGivenBlockPos(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         // pos
@@ -45,13 +59,47 @@ public class BlameBlockCommand {
         } catch (IllegalArgumentException e) {
             world = MinecraftUtil.worldToString(entity.world);
         }
+
+        long timeRange;
+        try {
+            timeRange = LongArgumentType.getLong(context, "time_range");
+            if (timeRange < 0)
+                return FAILED;
+        } catch (IllegalArgumentException e) {
+            timeRange = -1;
+        }
+
+        long amplifier;
+        try {
+            final String timeUnit = StringArgumentType.getString(context, "time_unit");
+            amplifier = timeUnitAmplifierMap.getOrDefault(timeUnit, -1);
+            if (amplifier < 0)
+                return FAILED;
+        } catch (IllegalArgumentException e) {
+            amplifier = 1;
+        }
+
+        if (timeRange >= 0) {
+            timeRange *= amplifier;
+            if (timeRange < 0)
+                return FAILED;
+        }
+
 //        String world = MinecraftUtil.worldToString(playerEntity.world);
         WorldPos blockPos = new WorldPos(world, x, y, z);
+        AbstractLookupFilter filter;
+        if (timeRange >= 0) {
+            filter = LookupFilters.compoundedFilter(new TimeLookupFilter(timeRange), new BlockPosLookupFilter(blockPos));
+        } else {
+            filter = new BlockPosLookupFilter(blockPos);
+        }
+
         LookupManager.INSTANCE.lookup(
-                new BlockPosLookupFilter(blockPos),
+                filter,
                 new Callback(context),
                 BlameLimitCommand.getLookupLimit(playerEntity.getUuid())
         );
+
         return SUCCESS;
     }
 

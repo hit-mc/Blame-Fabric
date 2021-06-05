@@ -11,10 +11,13 @@ import com.keuin.blame.lookup.LookupManager;
 import com.keuin.blame.util.DatabaseUtil;
 import com.keuin.blame.util.PrintUtil;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.LongArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.player.*;
+import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.command.argument.DimensionArgumentType;
 import net.minecraft.server.command.CommandManager;
@@ -91,7 +94,15 @@ public class Blame implements ModInitializer {
                             .then(CommandManager.argument("pos", BlockPosArgumentType.blockPos())
                                     .executes(BlameBlockCommand::blameGivenBlockPos)
                                     .then(CommandManager.argument("world", DimensionArgumentType.dimension())
-                                            .executes(BlameBlockCommand::blameGivenBlockPos))))
+                                            .executes(BlameBlockCommand::blameGivenBlockPos)
+                                            .then(CommandManager.literal("last")
+                                                    .then(CommandManager.argument("time_range", LongArgumentType.longArg())
+                                                            .executes(BlameBlockCommand::blameGivenBlockPos)
+                                                            .then(CommandManager.argument("time_unit", StringArgumentType.word())
+                                                                    .suggests((ctx, builder) -> CommandSource.suggestMatching(BlameBlockCommand.timeUnits, builder))
+                                                                    .executes(BlameBlockCommand::blameGivenBlockPos))
+                                                    ))
+                                    )))
             );
             commandDispatcher.register(
                     CommandManager.literal("blame").then(CommandManager.literal("limit")

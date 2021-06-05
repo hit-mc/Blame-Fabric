@@ -1,12 +1,11 @@
 package com.keuin.blame.lookup;
 
 import com.keuin.blame.data.WorldPos;
-import com.keuin.blame.data.entry.LogEntry;
 import com.keuin.blame.data.entry.LogEntryNames;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
+import org.bson.conversions.Bson;
 
-public class BlockPosLookupFilter extends AbstractLookupFilter {
+public class BlockPosLookupFilter implements AbstractLookupFilter {
     private final WorldPos blockPos;
 
     public BlockPosLookupFilter(WorldPos blockPos) {
@@ -14,10 +13,10 @@ public class BlockPosLookupFilter extends AbstractLookupFilter {
     }
 
     @Override
-    FindIterable<LogEntry> find(FindIterable<LogEntry> iterable) {
-        return iterable.filter(Filters.and(
+    public Bson filter() {
+        return Filters.and(
                 Filters.eq(LogEntryNames.VERSION, 1),
                 Filters.eq(LogEntryNames.OBJECT_POS, blockPos)
-        ));
+        );
     }
 }

@@ -1,6 +1,7 @@
 package com.keuin.blame.lookup;
 
 import com.keuin.blame.data.entry.LogEntry;
+import com.keuin.blame.data.entry.LogEntryNames;
 import com.keuin.blame.util.DatabaseUtil;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Sorts;
@@ -42,9 +43,11 @@ public class LookupWorker extends Thread {
                 AbstractLookupFilter filter = item.getFilter();
 
                 time = System.currentTimeMillis();
-                FindIterable<LogEntry> find = filter.find(
-                        collection.find().sort(Sorts.descending("timestamp_millis")).limit(item.getLimit())
-                );
+                FindIterable<LogEntry> find = collection
+                        .find()
+                        .filter(filter.filter())
+                        .sort(Sorts.descending(LogEntryNames.TIMESTAMP_MILLIS))
+                        .limit(item.getLimit());
 //                FindIterable<LogEntry> find = collection.find();//.sort(Sorts.descending("timestamp_millis"));
                 time = System.currentTimeMillis() - time;
                 logger.info(String.format("Lookup finished in %d ms.", time));

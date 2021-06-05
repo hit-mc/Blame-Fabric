@@ -1,11 +1,12 @@
 package com.keuin.blame.lookup;
 
-import com.keuin.blame.data.entry.LogEntry;
-import com.mongodb.client.FindIterable;
+import org.bson.BsonDocument;
+import org.bson.conversions.Bson;
 
-public class DummyFilter extends AbstractLookupFilter {
+public class DummyFilter implements AbstractLookupFilter {
+
     @Override
-    protected FindIterable<LogEntry> find(FindIterable<LogEntry> iterable) {
-        return iterable;
+    public Bson filter() {
+        return new BsonDocument();
     }
 }
