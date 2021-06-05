@@ -1,13 +1,15 @@
 package com.keuin.blame.util;
 
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.*;
+import net.minecraft.text.BaseText;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -139,16 +141,23 @@ public final class PrintUtil implements ServerLifecycleEvents.ServerStarted {
     }
 
     public static void message(CommandContext<ServerCommandSource> context, Object... objects) {
-        new Printer().append(objects).sendTo(context);
+        new Printer(false).append(objects).sendTo(context);
+    }
+
+    public static void error(CommandContext<ServerCommandSource> context, Object... objects) {
+        new Printer(true).append(objects).sendTo(context);
     }
 
     public static Printer newPrinter() {
-        return new Printer();
+        return new Printer(false);
     }
 
     public static class Printer {
         private final BaseText message = new LiteralText("");
-        public Printer() {
+        private final boolean error;
+
+        public Printer(boolean error) {
+            this.error = error;
         }
 
         public Printer append(Object... objects) {
@@ -171,16 +180,19 @@ public final class PrintUtil implements ServerLifecycleEvents.ServerStarted {
             return this;
         }
 
+        public Printer newline() {
+            return this.append("\n");
+        }
+
         public void sendTo(Consumer<Text> receiver) {
             receiver.accept(message);
         }
 
         public void sendTo(CommandContext<ServerCommandSource> context) {
-            try {
-                context.getSource().getPlayer().sendSystemMessage(message, UUID_NULL);
-            } catch (CommandSyntaxException e) {
-                throw new IllegalArgumentException("CommandContext must be of a player");
-            }
+            if (error)
+                context.getSource().sendError(message);
+            else
+                context.getSource().sendFeedback(message, false);
         }
     }
 

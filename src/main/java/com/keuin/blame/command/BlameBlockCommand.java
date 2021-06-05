@@ -6,6 +6,7 @@ import com.keuin.blame.lookup.*;
 import com.keuin.blame.util.MinecraftUtil;
 import com.keuin.blame.util.PrettyUtil;
 import com.keuin.blame.util.PrintUtil;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -44,6 +45,7 @@ public class BlameBlockCommand {
         Entity entity = context.getSource().getEntity();
         if (!(entity instanceof ServerPlayerEntity)) {
             // can only be executed by player
+            PrintUtil.error(context, "This command cannot be used in server console.");
             return FAILED;
         }
 
@@ -63,8 +65,10 @@ public class BlameBlockCommand {
         long timeRange;
         try {
             timeRange = LongArgumentType.getLong(context, "time_range");
-            if (timeRange < 0)
+            if (timeRange < 0) {
+                PrintUtil.error(context, "Time range must be positive.");
                 return FAILED;
+            }
         } catch (IllegalArgumentException e) {
             timeRange = -1;
         }
@@ -73,8 +77,10 @@ public class BlameBlockCommand {
         try {
             final String timeUnit = StringArgumentType.getString(context, "time_unit");
             amplifier = timeUnitAmplifierMap.getOrDefault(timeUnit, -1);
-            if (amplifier < 0)
+            if (amplifier < 0) {
+                PrintUtil.error(context, "Invalid time unit.");
                 return FAILED;
+            }
         } catch (IllegalArgumentException e) {
             amplifier = 1;
         }
@@ -83,6 +89,17 @@ public class BlameBlockCommand {
             timeRange *= amplifier;
             if (timeRange < 0)
                 return FAILED;
+        }
+
+        int amountLimit;
+        try {
+            amountLimit = IntegerArgumentType.getInteger(context, "amount");
+            if (amountLimit <= 0) {
+                PrintUtil.error(context, "Amount must be positive.");
+                return FAILED;
+            }
+        } catch (IllegalArgumentException e) {
+            amountLimit = BlameLimitCommand.DEFAULT_LOOKUP_LIMIT;
         }
 
 //        String world = MinecraftUtil.worldToString(playerEntity.world);
@@ -97,7 +114,7 @@ public class BlameBlockCommand {
         LookupManager.INSTANCE.lookup(
                 filter,
                 new Callback(context),
-                BlameLimitCommand.getLookupLimit(playerEntity.getUuid())
+                amountLimit
         );
 
         return SUCCESS;
@@ -123,13 +140,13 @@ public class BlameBlockCommand {
             boolean isFirst = true;
             for (LogEntry logEntry : logEntries) {
                 if (!isFirst)
-                    printer.append("\n");
-                printer.append(Formatting.YELLOW, "Time: ", PrettyUtil.timestampToString(logEntry.timeMillis), "\n")
-                        .append(Formatting.YELLOW, "Subject: ", Formatting.AQUA, logEntry.subjectId, "{", logEntry.subjectUUID, "} @ ", logEntry.subjectPos, "\n")
-                        .append(Formatting.YELLOW, "Action: ", Formatting.AQUA, logEntry.actionType, "\n")
-                        .append(Formatting.YELLOW, "Object: ", Formatting.AQUA, logEntry.objectType, "[", logEntry.objectId, "] @ ", logEntry.objectPos, "\n")
-                        .append(Formatting.YELLOW, "Log version: ", logEntry.version, "\n")
-                        .append(Formatting.YELLOW, "Game version: ", logEntry.gameVersion, "\n")
+                    printer.newline();
+                printer.append(Formatting.YELLOW, "Time: ", PrettyUtil.timestampToString(logEntry.timeMillis)).newline()
+                        .append(Formatting.YELLOW, "Subject: ", Formatting.AQUA, logEntry.subjectId, "{", logEntry.subjectUUID, "} @ ", logEntry.subjectPos).newline()
+                        .append(Formatting.YELLOW, "Action: ", Formatting.AQUA, logEntry.actionType).newline()
+                        .append(Formatting.YELLOW, "Object: ", Formatting.AQUA, logEntry.objectType, "[", logEntry.objectId, "] @ ", logEntry.objectPos).newline()
+                        .append(Formatting.YELLOW, "Log version: ", logEntry.version).newline()
+                        .append(Formatting.YELLOW, "Game version: ", logEntry.gameVersion).newline()
                         .append("================");
                 ++printCount;
                 isFirst = false;

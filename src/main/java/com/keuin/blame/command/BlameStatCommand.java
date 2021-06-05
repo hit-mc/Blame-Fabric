@@ -12,6 +12,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -22,26 +23,25 @@ public class BlameStatCommand {
     private static final Logger logger = Logger.getLogger(BlameStatCommand.class.getName());
 
     public static int showStat(CommandContext<ServerCommandSource> context) {
-        PrintUtil.msgInfo(context, "Collecting statistics. This may take a few seconds...");
-        showStat(new ShowStatCallback() {
-            @Override
-            public void showStat(@Nullable BlameStat stat) {
-                StringBuilder sb = new StringBuilder();
-                if (stat != null) {
-                    sb.append("Statistics\n");
-                    sb.append("====\n");
-                    sb.append("# Count by subjects\n");
-                    stat.getCountMap().forEach((subjectId, count) -> {
-                        sb.append("<").append(
-                                Optional.ofNullable(Strings.emptyToNull(subjectId)).orElse("null")
-                        ).append(">: ").append(count).append("\n");
-                    });
-                    sb.append("=== END ===");
-                } else {
-                    sb.append("Failed to get statistics. Please refer to server log for more information.");
+        PrintUtil.message(context, Formatting.ITALIC, "Collecting statistics. This may take a few seconds...");
+        showStat(stat -> {
+            PrintUtil.Printer sb = PrintUtil.newPrinter();
+            if (stat != null) {
+                sb.append("Logs grouped by subjects:").newline();
+                boolean isFirst = true;
+                for (Map.Entry<String, Long> entry : stat.getCountMap().entrySet()) {
+                    if (!isFirst)
+                        sb.newline();
+                    isFirst = false;
+                    final String subjectId = entry.getKey();
+                    final long count = entry.getValue();
+                    sb.append(Formatting.YELLOW, Optional.ofNullable(Strings.emptyToNull(subjectId)).orElse("null"))
+                            .append(": ").append(count);
                 }
-                PrintUtil.msgInfo(context, sb.toString());
+            } else {
+                sb.append(Formatting.RED, "Failed to get statistics. Please refer to server log for more information.");
             }
+            sb.sendTo(context);
         });
         return Commands.SUCCESS;
     }

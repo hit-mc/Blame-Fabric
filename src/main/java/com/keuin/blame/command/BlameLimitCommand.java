@@ -17,7 +17,7 @@ import static com.keuin.blame.command.Commands.SUCCESS;
 public class BlameLimitCommand {
 
     private static final Map<UUID, Integer> maxLookupCount = new ConcurrentHashMap<>();
-    private static final int DEFAULT_LOOKUP_LIMIT = 5;
+    public static final int DEFAULT_LOOKUP_LIMIT = 5;
 
     public static int setLimit(CommandContext<ServerCommandSource> context) {
         Entity entity = context.getSource().getEntity();
@@ -49,6 +49,7 @@ public class BlameLimitCommand {
      * @param playerUUID the player's uuid.
      * @return the limit.
      */
+    @Deprecated
     public static int getLookupLimit(UUID playerUUID) {
         return maxLookupCount.getOrDefault(playerUUID, DEFAULT_LOOKUP_LIMIT);
     }

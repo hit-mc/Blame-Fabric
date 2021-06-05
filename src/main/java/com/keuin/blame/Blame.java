@@ -13,6 +13,7 @@ import com.keuin.blame.util.PrintUtil;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -21,12 +22,14 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.command.argument.DimensionArgumentType;
 import net.minecraft.server.command.CommandManager;
+import net.minecraft.server.command.ServerCommandSource;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class Blame implements ModInitializer {
@@ -89,19 +92,29 @@ public class Blame implements ModInitializer {
 
         // register
         CommandRegistrationCallback.EVENT.register((commandDispatcher, b) -> {
+            final LiteralArgumentBuilder<ServerCommandSource> amountLimitArgument = CommandManager.literal("limit")
+                    .then(CommandManager.argument("amount", IntegerArgumentType.integer())
+                            .suggests((ctx, builder) -> CommandSource.suggestMatching(Arrays.asList("1", "5", "10"), builder))
+                            .executes(BlameBlockCommand::blameGivenBlockPos)
+                    ).executes(BlameBlockCommand::blameGivenBlockPos);
+            final LiteralArgumentBuilder<ServerCommandSource> timeRangeArgument = CommandManager.literal("last")
+                    .then(CommandManager.argument("time_range", LongArgumentType.longArg())
+                            .executes(BlameBlockCommand::blameGivenBlockPos)
+                            .then(CommandManager.argument("time_unit", StringArgumentType.word())
+                                    .suggests((ctx, builder) -> CommandSource.suggestMatching(BlameBlockCommand.timeUnits, builder))
+                                    .executes(BlameBlockCommand::blameGivenBlockPos)
+                                    .then(amountLimitArgument)
+                            )
+
+                    );
             commandDispatcher.register(
                     CommandManager.literal("blame").then(CommandManager.literal("block")
                             .then(CommandManager.argument("pos", BlockPosArgumentType.blockPos())
                                     .executes(BlameBlockCommand::blameGivenBlockPos)
                                     .then(CommandManager.argument("world", DimensionArgumentType.dimension())
                                             .executes(BlameBlockCommand::blameGivenBlockPos)
-                                            .then(CommandManager.literal("last")
-                                                    .then(CommandManager.argument("time_range", LongArgumentType.longArg())
-                                                            .executes(BlameBlockCommand::blameGivenBlockPos)
-                                                            .then(CommandManager.argument("time_unit", StringArgumentType.word())
-                                                                    .suggests((ctx, builder) -> CommandSource.suggestMatching(BlameBlockCommand.timeUnits, builder))
-                                                                    .executes(BlameBlockCommand::blameGivenBlockPos))
-                                                    ))
+                                            .then(timeRangeArgument)
+                                            .then(amountLimitArgument)
                                     )))
             );
             commandDispatcher.register(
