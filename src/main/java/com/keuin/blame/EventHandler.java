@@ -48,7 +48,7 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
         // 不检查重复，直接提交
         String worldString = MinecraftUtil.worldToString(world);
         String blockId = Registry.BLOCK.getId(world.getBlockState(blockHitResult.getBlockPos()).getBlock()).toString();
-        LogEntry entry = LogEntryFactory.playerWithBlock(
+        LogEntry entry = LogEntryFactory.entityWithBlock(
                 playerEntity,
                 worldString,
                 blockId,
@@ -88,7 +88,7 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
     public void onPlayerBreakBlock(World world, PlayerEntity playerEntity, BlockPos blockPos, BlockState blockState, BlockEntity blockEntity) {
         String worldString = MinecraftUtil.worldToString(world);
         String blockId = Registry.BLOCK.getId(blockState.getBlock()).toString();
-        LogEntry entry = LogEntryFactory.playerWithBlock(
+        LogEntry entry = LogEntryFactory.entityWithBlock(
                 playerEntity,
                 worldString,
                 blockId,
