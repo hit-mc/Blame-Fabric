@@ -19,12 +19,10 @@ public abstract class BlockPlaceMixin extends AbstractCriterion<PlacedBlockCrite
 
 	@Inject(at = @At(value = "HEAD"), method = "trigger")
 	public void trigger(ServerPlayerEntity player, BlockPos blockPos, ItemStack stack, CallbackInfo ci) {
-		PlaceBlockHandler.EVENT.invoker().onPlayerPlaceBlock(
+		PlaceBlockHandler.EVENT.invoker().onEntityPlaceBlock(
 				player.world,
 				player,
-				blockPos,
-				player.world.getBlockState(blockPos),
-				player.world.getBlockEntity(blockPos)
+				blockPos
 		);
 	}
 }

@@ -3,17 +3,24 @@ package com.keuin.blame.data;
 import com.keuin.blame.data.entry.LogEntry;
 import com.keuin.blame.data.enums.ActionType;
 import com.keuin.blame.data.enums.ObjectType;
+import com.keuin.blame.util.MinecraftUtil;
+import net.minecraft.block.entity.EndGatewayBlockEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.registry.Registry;
+
+import java.util.Objects;
 
 public class LogEntryFactory {
-    public static LogEntry playerWithBlock(PlayerEntity player, String playerWorld, String blockId, Vec3i blockPos, String blockWorld, ActionType actionType) {
-        Vec3d playerPos = player.getPos();
+    public static LogEntry entityWithBlock(LivingEntity livingEntity, String playerWorld, String blockId, Vec3i blockPos, String blockWorld, ActionType actionType) {
+        Vec3d playerPos = livingEntity.getPos();
         return new LogEntry(
                 System.currentTimeMillis(),
-                player.getName().asString(),
-                player.getUuid(),
+                livingEntity.getName().asString(),
+                livingEntity.getUuid(),
                 new WorldPos(playerWorld, playerPos.x, playerPos.y, playerPos.z),
                 actionType,
                 ObjectType.BLOCK,

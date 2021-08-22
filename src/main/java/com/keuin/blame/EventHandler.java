@@ -68,18 +68,20 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
     }
 
     @Override
-    public void onPlayerPlaceBlock(World world, PlayerEntity playerEntity, BlockPos blockPos, BlockState blockState, BlockEntity blockEntity) {
+    public void onEntityPlaceBlock(World world, LivingEntity livingEntity, BlockPos blockPos) {
+        var blockState = world.getBlockState(blockPos);
+        var blockEntity = world.getBlockEntity(blockPos);
         String blockId = Registry.BLOCK.getId(blockState.getBlock()).toString();
         String worldString = MinecraftUtil.worldToString(world);
-        LogEntry entry = LogEntryFactory.playerWithBlock(
-                playerEntity,
+        LogEntry entry = LogEntryFactory.entityWithBlock(
+                livingEntity,
                 worldString,
                 blockId,
                 blockPos,
                 worldString,
                 ActionType.BLOCK_PLACE
         );
-        SubmitWorker.INSTANCE.submit(entry);
+         SubmitWorker.INSTANCE.submit(entry);
     }
 
     @Override
