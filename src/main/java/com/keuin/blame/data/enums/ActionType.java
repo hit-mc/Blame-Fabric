@@ -8,7 +8,8 @@ public enum ActionType implements IntegerEnum {
     BLOCK_USE(3, "USE_BLOCK"),
     ENTITY_ATTACK(4, "ATTACK_ENTITY"),
     ENTITY_USE(5, "USE_ENTITY"),
-    ITEM_USE(6, "USE_ITEM");
+    ITEM_USE(6, "USE_ITEM"),
+    TELEPORTED_BY(7, "TELEPORTED_BY");
 
     private final int value;
     private final String typeString;

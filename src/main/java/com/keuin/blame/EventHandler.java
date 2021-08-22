@@ -7,7 +7,9 @@ import com.keuin.blame.data.enums.ActionType;
 import com.keuin.blame.util.MinecraftUtil;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.EndGatewayBlockEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -19,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, BreakBlockHandler, UseBlockHandler, UseEntityHandler, UseItemHandler {
+public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, BreakBlockHandler, UseBlockHandler, UseEntityHandler, UseItemHandler, EndGatewayTeleportHandler {
 
     public static final EventHandler INSTANCE = new EventHandler();
 
@@ -166,4 +168,9 @@ public class EventHandler implements AttackEntityHandler, PlaceBlockHandler, Bre
         // TODO: 增加cool down，过滤掉两个相邻重复事件（时间间隔大概为20ms+）
     }
 
+    @Override
+    public void onEndGatewayTeleport(EndGatewayBlockEntity gatewayBlockEntity, Entity teleportedEntity) {
+        var entry = LogEntryFactory.endGatewayTeleported(teleportedEntity, gatewayBlockEntity);
+        SubmitWorker.INSTANCE.submit(entry);
+    }
 }

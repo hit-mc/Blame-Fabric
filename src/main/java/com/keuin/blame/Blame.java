@@ -2,6 +2,7 @@ package com.keuin.blame;
 
 import com.google.gson.Gson;
 import com.keuin.blame.adapter.*;
+import com.keuin.blame.adapter.handler.EndGatewayTeleportHandler;
 import com.keuin.blame.adapter.handler.PlaceBlockHandler;
 import com.keuin.blame.command.BlameBlockCommand;
 import com.keuin.blame.command.BlameLimitCommand;
@@ -86,6 +87,7 @@ public class Blame implements ModInitializer {
         UseBlockCallback.EVENT.register(new UseBlockAdapter(EventHandler.INSTANCE));
         UseEntityCallback.EVENT.register(new UseEntityAdapter(EventHandler.INSTANCE));
         UseItemCallback.EVENT.register(new UseItemAdapter(EventHandler.INSTANCE));
+        EndGatewayTeleportHandler.EVENT.register(EventHandler.INSTANCE);
 
         // initialize PrintUtil
         ServerLifecycleEvents.SERVER_STARTED.register(PrintUtil.INSTANCE);

@@ -56,4 +56,23 @@ public class LogEntryFactory {
                 WorldPos.NULL_POS
         );
     }
+
+
+    @SuppressWarnings("ConstantConditions")
+    public static LogEntry endGatewayTeleported(Entity entity, EndGatewayBlockEntity gatewayBlockEntity) {
+        var world = gatewayBlockEntity.hasWorld() ? gatewayBlockEntity.getWorld() : Objects.requireNonNull(entity.world);
+        var worldName = MinecraftUtil.worldToString(world);
+        var gatewayPos = gatewayBlockEntity.getPos();
+        var itemId = Registry.ITEM.getId(gatewayBlockEntity.getCachedState().getBlock().asItem()).toString();
+        return new LogEntry(
+                System.currentTimeMillis(),
+                entity.getName().asString(),
+                entity.getUuid(),
+                new WorldPos(worldName, entity.getX(), entity.getY(), entity.getZ()),
+                ActionType.TELEPORTED_BY,
+                ObjectType.BLOCK,
+                itemId,
+                new WorldPos(worldName, gatewayPos.getX(), gatewayPos.getY(), gatewayPos.getZ())
+        );
+    }
 }
