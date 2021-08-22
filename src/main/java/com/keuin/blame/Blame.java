@@ -69,6 +69,8 @@ public class Blame implements ModInitializer {
         if (!loadConfig())
             return;
 
+        logger.info("Register event hooks...");
+
         DatabaseUtil.disableMongoSpamming();
 
         // hook disable event
