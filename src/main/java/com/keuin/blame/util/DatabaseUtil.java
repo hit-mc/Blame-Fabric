@@ -7,6 +7,7 @@ import com.keuin.blame.data.enums.codec.ObjectTypeCodec;
 import com.keuin.blame.data.enums.codec.WorldPosCodec;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
+import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -20,7 +21,7 @@ public class DatabaseUtil {
 
     public static final MongoConfig MONGO_CONFIG = Blame.config.getMongoConfig();
     public static final CodecRegistry CODEC_REGISTRY = CodecRegistries.fromRegistries(
-            com.mongodb.MongoClient.getDefaultCodecRegistry(),
+            MongoClientSettings.getDefaultCodecRegistry(),
             CodecRegistries.fromCodecs(
                     new ActionTypeCodec(),
                     new ObjectTypeCodec(),
@@ -31,6 +32,7 @@ public class DatabaseUtil {
     public static final MongoClientSettings CLIENT_SETTINGS = MongoClientSettings.builder()
             .applyConnectionString(new ConnectionString(MONGO_CONFIG.getAddress()))
             .codecRegistry(CODEC_REGISTRY)
+            .uuidRepresentation(UuidRepresentation.JAVA_LEGACY) // for backward-compatible with logs created by older versions
             .build();
 
     // TODO: Auto create indexes if the collection is empty

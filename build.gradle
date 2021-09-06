@@ -11,6 +11,8 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
+	mavenCentral()
+
 	// Add repositories to retrieve artifacts from in here.
 	// You should only use this when depending on other mods because
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
@@ -29,9 +31,9 @@ dependencies {
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.
-	implementation 'junit:junit:4.12'
-	implementation 'org.mongodb:mongo-java-driver:3.12.7'
-	include 'org.mongodb:mongo-java-driver:3.12.7'
+	implementation 'junit:junit:4.13.2'
+	implementation 'org.mongodb:mongodb-driver-sync:4.3.1'
+	implementation 'org.mongodb:bson:4.3.1'
 }
 
 processResources {
