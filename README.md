@@ -1,10 +1,17 @@
 # Blame
 
-When you find something has been messed up in the Minecraft server you're managing, then who to blame?
+The name is inspired by `git blame`.
 
-*Blame* records players' interactions with blocks and entities, thus enabling you to find out the unruly player.
+Show logs of player interactions with blocks and entities.
 
-## Usage
+# Logged player actions
+
+- Place/Break/Right Click blocks
+- Attack/Right Click entities
+- Frost Walker modifications on blocks
+- End Portal usages
+
+# Usage
 
 - Install MongoDB
 - Configure your database in `blame.json` sitting with the server `.jar` file
