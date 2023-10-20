@@ -8,8 +8,8 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.Logger;
 
 public class SubmitWorker {
@@ -17,7 +17,7 @@ public class SubmitWorker {
     public static final SubmitWorker INSTANCE = new SubmitWorker();
     private final Logger logger = Logger.getLogger(SubmitWorker.class.getName());
 
-    private final BlockingQueue<LogEntry> queue = new LinkedBlockingDeque<>(4096);
+    private final BlockingQueue<LogEntry> queue = new ArrayBlockingQueue<>(4096);
     private final Thread thread = new Thread(SubmitWorker.this::run);
     private boolean run = true;
 
