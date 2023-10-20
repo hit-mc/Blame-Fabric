@@ -17,7 +17,7 @@ public class SubmitWorker {
     public static final SubmitWorker INSTANCE = new SubmitWorker();
     private final Logger logger = Logger.getLogger(SubmitWorker.class.getName());
 
-    private final BlockingQueue<LogEntry> queue = new ArrayBlockingQueue<>(4096);
+    private final BlockingQueue<LogEntry> queue = new ArrayBlockingQueue<>(1048576);
     private final Thread thread = new Thread(SubmitWorker.this::run);
     private boolean run = true;
 
