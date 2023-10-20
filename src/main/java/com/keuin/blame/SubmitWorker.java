@@ -10,6 +10,7 @@ import com.mongodb.client.MongoDatabase;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 public class SubmitWorker {
@@ -19,7 +20,8 @@ public class SubmitWorker {
 
     private final BlockingQueue<LogEntry> queue = new ArrayBlockingQueue<>(1048576);
     private final Thread thread = new Thread(SubmitWorker.this::run);
-    private boolean run = true;
+
+    private final AtomicBoolean isStopped = new AtomicBoolean(false);
 
 
     private SubmitWorker() {
@@ -28,14 +30,19 @@ public class SubmitWorker {
     }
 
     public void submit(LogEntry entry) {
+        if (isStopped.get()) {
+            return;
+        }
         if (entry == null)
             throw new IllegalArgumentException("entry cannot be null");
-        queue.offer(entry);
+        if (!queue.offer(entry)) {
+            logger.severe("Write queue is full. Dropping new log entries.");
+        }
     }
 
     public void stop() {
+        isStopped.set(true);
         thread.interrupt();
-        this.run = false;
     }
 
     private void run() {
@@ -47,12 +54,14 @@ public class SubmitWorker {
                     DatabaseUtil.MONGO_CONFIG.getLogCollectionName(), LogEntry.class
             );
             // TODO: 第一个事件触发导致延迟很大
-            while (this.run) {
-                LogEntry entry = queue.take();
-                collection.insertOne(entry);
-//                logger.info("Entry inserted.");
+            while (!isStopped.get() || !queue.isEmpty()) {
+                try {
+                    LogEntry entry = queue.take();
+                    collection.insertOne(entry);
+                } catch (InterruptedException ex) {
+                    isStopped.set(true);
+                }
             }
-        } catch (InterruptedException ignored) {
         } catch (MongoClientException exception) {
             logger.severe("Failed to submit: " + exception + ". Worker is quitting...");
         }
