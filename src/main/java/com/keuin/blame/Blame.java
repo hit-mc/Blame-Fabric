@@ -6,7 +6,6 @@ import com.keuin.blame.adapter.handler.EndGatewayTeleportHandler;
 import com.keuin.blame.adapter.handler.PlaceBlockHandler;
 import com.keuin.blame.command.BlameBlockCommand;
 import com.keuin.blame.command.BlameLimitCommand;
-import com.keuin.blame.command.BlameStatCommand;
 import com.keuin.blame.config.BlameConfig;
 import com.keuin.blame.lookup.QueryExecutor;
 import com.keuin.blame.util.PrintUtil;
@@ -126,10 +125,6 @@ public class Blame implements ModInitializer {
                     CommandManager.literal("blame").then(CommandManager.literal("limit")
                             .then(CommandManager.argument("limit", IntegerArgumentType.integer(1, 255))
                                     .executes(BlameLimitCommand::setLimit)))
-            );
-            commandDispatcher.register(
-                    CommandManager.literal("blame").then(CommandManager.literal("stat")
-                            .executes(BlameStatCommand::showStat))
             );
         });
     }
