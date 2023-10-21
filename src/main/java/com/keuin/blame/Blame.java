@@ -8,8 +8,7 @@ import com.keuin.blame.command.BlameBlockCommand;
 import com.keuin.blame.command.BlameLimitCommand;
 import com.keuin.blame.command.BlameStatCommand;
 import com.keuin.blame.config.BlameConfig;
-import com.keuin.blame.lookup.LookupManager;
-import com.keuin.blame.util.DatabaseUtil;
+import com.keuin.blame.lookup.QueryExecutor;
 import com.keuin.blame.util.PrintUtil;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
@@ -38,6 +37,8 @@ public class Blame implements ModInitializer {
     private static final Logger logger = Logger.getLogger(Blame.class.getName());
 
     public static BlameConfig config;
+
+    public static QueryExecutor queryExecutor;
 
     public static boolean loadConfig() {
         String configFileName = "blame.json";
@@ -69,14 +70,14 @@ public class Blame implements ModInitializer {
         if (!loadConfig())
             return;
 
-        logger.info("Register event hooks...");
+        queryExecutor = new QueryExecutor();
 
-        DatabaseUtil.disableMongoSpamming();
+        logger.info("Register event hooks...");
 
         // hook disable event
         ServerLifecycleEvents.SERVER_STOPPING.register(minecraftServer -> {
             logger.info("Stopping LookupManager...");
-            LookupManager.INSTANCE.stop();
+//            LookupManager.INSTANCE.stop();
 
             logger.info("Stopping SubmitWorker...");
             SubmitWorker.INSTANCE.stop();

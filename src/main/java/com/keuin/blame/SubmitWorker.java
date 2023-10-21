@@ -1,7 +1,9 @@
 package com.keuin.blame;
 
-import com.clickhouse.client.*;
-import com.clickhouse.client.config.ClickHouseClientOption;
+import com.clickhouse.client.ClickHouseClient;
+import com.clickhouse.client.ClickHouseException;
+import com.clickhouse.client.ClickHouseRequest;
+import com.clickhouse.client.ClickHouseResponse;
 import com.clickhouse.data.ClickHouseDataStreamFactory;
 import com.clickhouse.data.ClickHouseFormat;
 import com.keuin.blame.data.entry.LogEntry;
@@ -15,8 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static com.clickhouse.client.ClickHouseCredentials.fromUserAndPassword;
 
 public class SubmitWorker {
 
@@ -117,29 +117,19 @@ public class SubmitWorker {
     }
 
     private void run() {
-        var config = DatabaseUtil.DB_CONFIG;
-        logger.info("Database: " + config.toString());
-        var server = ClickHouseNode.builder()
-                .host(config.address())
-                .port(ClickHouseProtocol.HTTP, config.port())
-                // .port(ClickHouseProtocol.GRPC, Integer.getInteger("chPort", 9100))
-                // .port(ClickHouseProtocol.TCP, Integer.getInteger("chPort", 9000))
-                .database(config.database())
-                .credentials(fromUserAndPassword(config.username(), config.password()))
-                .build();
-
+        var server = DatabaseUtil.getServer();
         var batchBuffer = new ArrayList<LogEntry>(batchSize);
         boolean writeImmediately = false;
         workLoop:
         while (true) {
-            try (var client = ClickHouseClient.newInstance(server.getProtocol())) {
+            try (var client = DatabaseUtil.getClient(server)) {
                 writeLoop:
                 while (true) {
                     var req = client.read(server).write()
-                            .table(config.table())
+                            .table(DatabaseUtil.DB_CONFIG.table())
                             .format(ClickHouseFormat.RowBinary)
 //                            .option(ClickHouseClientOption.ASYNC, false)
-                            .option(ClickHouseClientOption.COMPRESS, false);
+                            ;
                     var result = work(client, req, batchBuffer, writeImmediately);
                     switch (result) {
                         case CONTINUE -> {

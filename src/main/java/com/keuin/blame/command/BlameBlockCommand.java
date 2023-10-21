@@ -1,10 +1,7 @@
 package com.keuin.blame.command;
 
-import com.keuin.blame.data.WorldPos;
-import com.keuin.blame.data.entry.LogEntry;
-import com.keuin.blame.lookup.*;
+import com.keuin.blame.Blame;
 import com.keuin.blame.util.MinecraftUtil;
-import com.keuin.blame.util.PrettyUtil;
 import com.keuin.blame.util.PrintUtil;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
@@ -15,7 +12,6 @@ import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
@@ -99,20 +95,8 @@ public class BlameBlockCommand {
             amountLimit = BlameLimitCommand.DEFAULT_LOOKUP_LIMIT;
         }
 
-//        String world = MinecraftUtil.worldToString(playerEntity.world);
-        WorldPos blockPos = new WorldPos(world, x, y, z);
-        AbstractLookupFilter filter;
-        if (timeRange >= 0) {
-            filter = LookupFilters.compoundedFilter(new TimeLookupFilter(timeRange), new BlockPosLookupFilter(blockPos));
-        } else {
-            filter = new BlockPosLookupFilter(blockPos);
-        }
-
-        LookupManager.INSTANCE.lookup(
-                filter,
-                new Callback(context),
-                amountLimit
-        );
+        Blame.queryExecutor.byBlockPos(world, x, y, z, (msg) ->
+                context.getSource().sendFeedback(msg, false));
 
         return SUCCESS;
     }
@@ -120,44 +104,6 @@ public class BlameBlockCommand {
     // TODO
     public static int blameGivenBlockRange(CommandContext<ServerCommandSource> context) {
         return SUCCESS;
-    }
-
-    private static class Callback implements LookupCallback {
-
-        private final CommandContext<ServerCommandSource> context;
-
-        private Callback(CommandContext<ServerCommandSource> context) {
-            this.context = context;
-        }
-
-        @Override
-        public void onLookupFinishes(Iterable<LogEntry> logEntries) {
-            int printCount = 0;
-            PrintUtil.Printer printer = PrintUtil.newPrinter();
-            boolean isFirst = true;
-            for (LogEntry logEntry : logEntries) {
-                if (!isFirst)
-                    printer.newline();
-                printer.append(Formatting.YELLOW, "Time: ", PrettyUtil.timestampToString(logEntry.timeMillis)).newline()
-                        .append(Formatting.YELLOW, "Subject: ", Formatting.AQUA, logEntry.subjectId, "{", logEntry.subjectUUID, "} @ ", logEntry.subjectPos).newline()
-                        .append(Formatting.YELLOW, "Action: ", Formatting.AQUA, logEntry.actionType).newline()
-                        .append(Formatting.YELLOW, "Object: ", Formatting.AQUA, logEntry.objectType, "[", logEntry.objectId, "] @ ", logEntry.objectPos).newline()
-                        .append(Formatting.YELLOW, "Log version: ", logEntry.version).newline()
-                        .append(Formatting.YELLOW, "Game version: ", logEntry.gameVersion).newline()
-                        .append("================");
-                ++printCount;
-                isFirst = false;
-            }
-            if (printCount > 0) {
-                printer.sendTo(context);
-                PrintUtil.message(context,
-                        "Showed " + printCount + " event items. ",
-                        Formatting.ITALIC,
-                        "Use `/blame limit` to change print count limit.");
-            } else {
-                PrintUtil.message(context, "No logs found.");
-            }
-        }
     }
 
 }
