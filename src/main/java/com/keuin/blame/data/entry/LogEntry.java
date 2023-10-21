@@ -1,78 +1,68 @@
 package com.keuin.blame.data.entry;
 
+import com.clickhouse.data.ClickHousePipedOutputStream;
+import com.clickhouse.data.format.BinaryStreamUtils;
 import com.keuin.blame.data.WorldPos;
 import com.keuin.blame.data.enums.ActionType;
 import com.keuin.blame.data.enums.ObjectType;
-import com.keuin.blame.util.MinecraftUtil;
 import com.keuin.blame.util.PrettyUtil;
 import com.keuin.blame.util.UuidUtils;
 import net.minecraft.MinecraftVersion;
-import org.bson.codecs.pojo.annotations.BsonProperty;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com.keuin.blame.data.entry.LogEntryNames.*;
 
 public class LogEntry {
 
-    // {
-    //    "version": 1, // int
-    //    "subject": {
-    //        "uuid": player_uuid_bytes, // bytes
-    //        "id": player_id, // string
-    //        "pos": {
-    //            "world": world_id, // string
-    //            "x": pos_x, // float
-    //            "y": pos_y, // float
-    //            "z": pos_z, // float
-    //        }
-    //    },
-    //    "action": BLOCK_BREAK | BLOCK_PLACE | BLOCK_USE | ENTITY_USE | ENTITY_ATTACK | ITEM_USE, // int
-    //    "object": {
-    //        "type": OBJECT_BLOCK | OBJECT_ENTITY, // int
-    //        "id": object_id, // string
-    //        "pos": {
-    //            "world": world_id, // string
-    //            "x": pos_x, // float
-    //            "y": pos_y, // float
-    //            "z": pos_z, // float
-    //        }
-    //    }
-    //}
+    /*
+         {
+            "version": 1, // int
+            "subject": {
+                "uuid": player_uuid_bytes, // bytes
+                "id": player_id, // string
+                "pos": {
+                    "world": world_id, // string
+                    "x": pos_x, // float
+                    "y": pos_y, // float
+                    "z": pos_z, // float
+                }
+            },
+            "action": BLOCK_BREAK | BLOCK_PLACE | BLOCK_USE | ENTITY_USE | ENTITY_ATTACK | ITEM_USE, // int
+            "object": {
+                "type": OBJECT_BLOCK | OBJECT_ENTITY, // int
+                "id": object_id, // string
+                "pos": {
+                    "world": world_id, // string
+                    "x": pos_x, // float
+                    "y": pos_y, // float
+                    "z": pos_z, // float
+                }
+            }
+        }
+    */
 
-    @BsonProperty(VERSION)
     public int version = 1;
 
-    @BsonProperty(GAME_VERSION)
     public String gameVersion = MinecraftVersion.field_25319.getName();
 
-    @BsonProperty(TIMESTAMP_MILLIS)
-    public long timeMillis = 0;
+    public long timeMillis = 0; // timestamp_millis
 
-    @BsonProperty(SUBJECT_ID)
     public String subjectId = "";
 
-    @BsonProperty(SUBJECT_UUID)
     public UUID subjectUUID = UuidUtils.UUID_NULL;
 
-    @BsonProperty(SUBJECT_POS)
     public WorldPos subjectPos = WorldPos.NULL_POS;
 
-    @BsonProperty(ACTION_TYPE)
     public ActionType actionType = ActionType.NULL;
 
-    @BsonProperty(OBJECT_TYPE)
     public ObjectType objectType = ObjectType.NULL;
 
-    @BsonProperty(OBJECT_ID)
     public String objectId = "";
 
-    @BsonProperty(OBJECT_POS)
     public WorldPos objectPos = WorldPos.NULL_POS;
-
-    @BsonProperty(RADIUS)
-    public double radius = 0;
 
     public LogEntry() {
     }
@@ -89,7 +79,6 @@ public class LogEntry {
         this.objectType = entry.objectType;
         this.objectId = entry.objectId;
         this.objectPos = entry.objectPos;
-        this.radius = entry.radius;
     }
 
     public LogEntry(long timeMillis, String subjectId, UUID subjectUUID, WorldPos subjectPos, ActionType actionType, ObjectType objectType, String objectId, WorldPos objectPos) {
@@ -117,9 +106,6 @@ public class LogEntry {
         this.objectType = objectType;
         this.objectId = objectId;
         this.objectPos = objectPos;
-
-        // v2 params
-        this.radius = MinecraftUtil.getRadius(objectPos);
     }
 
     @Override
@@ -159,5 +145,52 @@ public class LogEntry {
                 ", gameVersion:" +
                 gameVersion +
                 ")";
+    }
+
+    public void write(ClickHousePipedOutputStream os) throws IOException {
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeInt8(os, actionType.getValue());
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeFixedString(os, gameVersion, 8);
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeString(os, objectId);
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeFixedString(os, objectPos.getWorld(), 24);
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeInt64(os, (long) (objectPos.getX()));
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeInt64(os, (long) (objectPos.getY()));
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeInt64(os, (long) (objectPos.getZ()));
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeInt32(os, objectType.getValue());
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeString(os, subjectId);
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeFixedString(os, subjectPos.getWorld(), 24);
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeFloat64(os, subjectPos.getX());
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeFloat64(os, subjectPos.getY());
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeFloat64(os, subjectPos.getZ());
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeFixedString(os, subjectUUID.toString(), 36); // lowercase
+
+        BinaryStreamUtils.writeNonNull(os);
+        BinaryStreamUtils.writeInt64(os, timeMillis);
     }
 }

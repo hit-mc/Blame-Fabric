@@ -1,31 +1,40 @@
 package com.keuin.blame;
 
+import com.clickhouse.client.*;
+import com.clickhouse.client.config.ClickHouseClientOption;
+import com.clickhouse.data.ClickHouseDataStreamFactory;
+import com.clickhouse.data.ClickHouseFormat;
 import com.keuin.blame.data.entry.LogEntry;
 import com.keuin.blame.util.DatabaseUtil;
-import com.mongodb.MongoClientException;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
+
+import static com.clickhouse.client.ClickHouseCredentials.fromUserAndPassword;
 
 public class SubmitWorker {
 
     public static final SubmitWorker INSTANCE = new SubmitWorker();
-    private final Logger logger = Logger.getLogger(SubmitWorker.class.getName());
-
+    private final Logger logger = LogManager.getLogger();
     private final BlockingQueue<LogEntry> queue = new ArrayBlockingQueue<>(1048576);
     private final Thread thread = new Thread(SubmitWorker.this::run);
-
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
+
+    private static final int batchSize = 1024;
+    private static final int maxWaitMillis = 3000;
 
 
     private SubmitWorker() {
-        thread.setUncaughtExceptionHandler((t, e) -> logger.severe(String.format("Exception in thread %s: %s", t.getName(), e)));
+        thread.setUncaughtExceptionHandler((t, e) ->
+                logger.error(String.format("Exception in thread %s: %s", t.getName(), e)));
         thread.start();
     }
 
@@ -36,7 +45,7 @@ public class SubmitWorker {
         if (entry == null)
             throw new IllegalArgumentException("entry cannot be null");
         if (!queue.offer(entry)) {
-            logger.severe("Write queue is full. Dropping new log entries.");
+            logger.error("Write queue is full. Dropping new log entries.");
         }
     }
 
@@ -45,26 +54,138 @@ public class SubmitWorker {
         thread.interrupt();
     }
 
-    private void run() {
-        try (final MongoClient mongoClient = MongoClients.create(DatabaseUtil.CLIENT_SETTINGS)) {
-            final MongoDatabase db = mongoClient.getDatabase(
-                    DatabaseUtil.MONGO_CONFIG.getDatabaseName()
-            );
-            final MongoCollection<LogEntry> collection = db.getCollection(
-                    DatabaseUtil.MONGO_CONFIG.getLogCollectionName(), LogEntry.class
-            );
-            // TODO: 第一个事件触发导致延迟很大
-            while (!isStopped.get() || !queue.isEmpty()) {
-                try {
-                    LogEntry entry = queue.take();
-                    collection.insertOne(entry);
-                } catch (InterruptedException ex) {
-                    isStopped.set(true);
+    /**
+     * Ensures the buffer is ready to consume from.
+     *
+     * @throws InterruptedException The buffer may be empty or non-empty.
+     */
+    private void accumulateBuffer(List<LogEntry> buffer) throws InterruptedException {
+        while (true) {
+            if (buffer.size() >= batchSize) {
+                // buffer is full, flush it
+                break;
+            }
+            var el = queue.poll();
+            if (el == null) {
+                if (buffer.isEmpty()) {
+                    // block until the first entry is read
+                    el = queue.take();
+                } else {
+                    // try to read more entries with timeout
+                    el = queue.poll(maxWaitMillis, TimeUnit.MILLISECONDS);
                 }
             }
-        } catch (MongoClientException exception) {
-            logger.severe("Failed to submit: " + exception + ". Worker is quitting...");
+            if (el == null) {
+                // poll timed out, flush buffer
+                break;
+            }
+            buffer.add(el);
         }
+    }
+
+    /**
+     * Bulk write all entries in buffer to database.
+     * Throws exception if error. The buffer is kept intact. No item is written.
+     */
+    private void bulkWrite(
+            List<LogEntry> buffer,
+            ClickHouseRequest.Mutation req
+    ) throws IOException, ClickHouseException {
+        try (var os = ClickHouseDataStreamFactory.getInstance()
+                .createPipedOutputStream(req.getConfig(), (Runnable) null);
+             var resp = req.data(os.getInputStream()).executeAndWait()) {
+            for (var el : buffer) {
+                el.write(os);
+            }
+            logger.info(String.format("Written %d log entries to ClickHouse. %s",
+                    buffer.size(), resp.getSummary().toString()));
+        }
+        buffer.clear();
+    }
+
+    private void run() {
+        var config = DatabaseUtil.DB_CONFIG;
+        var server = ClickHouseNode.builder()
+                .host(config.address())
+                .port(ClickHouseProtocol.HTTP, config.port())
+                // .port(ClickHouseProtocol.GRPC, Integer.getInteger("chPort", 9100))
+                // .port(ClickHouseProtocol.TCP, Integer.getInteger("chPort", 9000))
+                .database(config.table())
+                .credentials(fromUserAndPassword(config.username(), config.password()))
+                .build();
+
+        var batchBuffer = new ArrayList<LogEntry>(batchSize);
+        boolean writeImmediately = false;
+        workLoop:
+        while (true) {
+            try (var client = ClickHouseClient.newInstance(server.getProtocol())) {
+                writeLoop:
+                while (true) {
+                    var result = work(client, server, batchBuffer, writeImmediately);
+                    switch (result) {
+                        case CONTINUE -> {
+                            writeImmediately = false;
+                        }
+                        case RECONNECT -> {
+                            writeImmediately = true;
+                            break writeLoop;
+                        }
+                        case FINISH -> {
+                            break workLoop;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    enum WorkResult {
+        CONTINUE,
+        RECONNECT,
+        FINISH,
+        INSTANT_WRITE
+    }
+
+    private @NotNull WorkResult work(
+            ClickHouseClient client,
+            ClickHouseNode server,
+            List<LogEntry> buffer,
+            boolean writeImmediately
+    ) {
+        var req = client.write(server).format(ClickHouseFormat.RowBinary)
+                .option(ClickHouseClientOption.ASYNC, false);
+        boolean interrupted = false;
+        // if writeImmediately is set, do not accumulate the buffer, flush it immediately
+        try {
+            // accumulate buffer
+            if (!writeImmediately) {
+                accumulateBuffer(buffer);
+            }
+        } catch (InterruptedException ignored) {
+            // server is closing, flush the buffer immediately
+            // decline new write requests
+            isStopped.set(true);
+            interrupted = true;
+        }
+        try {
+            bulkWrite(buffer, req);
+        } catch (IOException ignored) {
+            // write failed
+            if (interrupted) {
+                // do not retry if already interrupted
+                // the error may be unrecoverable
+                return WorkResult.FINISH;
+            }
+            return WorkResult.RECONNECT;
+        } catch (ClickHouseException ex) {
+            logger.error("ClickHouse writer error", ex);
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException ignored) {
+            }
+            return WorkResult.RECONNECT;
+        }
+        return WorkResult.CONTINUE;
     }
 
 }

@@ -7,15 +7,15 @@ import java.util.Objects;
 public class BlameConfig {
 
     @SerializedName("database")
-    private final MongoConfig mongoConfig;
+    private final DatabaseConfig databaseConfig;
 
 
-    public BlameConfig(MongoConfig mongoConfig) {
-        this.mongoConfig = mongoConfig;
+    public BlameConfig(DatabaseConfig databaseConfig) {
+        this.databaseConfig = databaseConfig;
     }
 
-    public MongoConfig getMongoConfig() {
-        return mongoConfig;
+    public DatabaseConfig getMongoConfig() {
+        return databaseConfig;
     }
 
     @Override
@@ -23,18 +23,18 @@ public class BlameConfig {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BlameConfig that = (BlameConfig) o;
-        return Objects.equals(mongoConfig, that.mongoConfig);
+        return Objects.equals(databaseConfig, that.databaseConfig);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mongoConfig);
+        return Objects.hash(databaseConfig);
     }
 
     @Override
     public String toString() {
         return "BlameConfig{" +
-                "mongoConfig=" + mongoConfig +
+                "databaseConfig=" + databaseConfig +
                 '}';
     }
 }

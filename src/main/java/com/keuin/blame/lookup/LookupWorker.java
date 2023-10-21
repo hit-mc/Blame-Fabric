@@ -31,10 +31,10 @@ public class LookupWorker extends Thread {
     public void run() {
         try (final MongoClient mongoClient = MongoClients.create(CLIENT_SETTINGS)) {
             final MongoDatabase db = mongoClient.getDatabase(
-                    DatabaseUtil.MONGO_CONFIG.getDatabaseName()
+                    DatabaseUtil.DB_CONFIG.getDatabaseName()
             );
             final MongoCollection<LogEntry> collection = db.getCollection(
-                    DatabaseUtil.MONGO_CONFIG.getLogCollectionName(), LogEntry.class
+                    DatabaseUtil.DB_CONFIG.getTableName(), LogEntry.class
             );
             long time;
             while (running) {

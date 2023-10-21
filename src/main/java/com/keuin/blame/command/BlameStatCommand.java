@@ -54,10 +54,10 @@ public class BlameStatCommand {
                 logger.info("Collecting statistics...");
                 try (final MongoClient mongoClient = MongoClients.create(DatabaseUtil.CLIENT_SETTINGS)) {
                     final MongoDatabase db = mongoClient.getDatabase(
-                            DatabaseUtil.MONGO_CONFIG.getDatabaseName()
+                            DatabaseUtil.DB_CONFIG.getDatabaseName()
                     );
                     final MongoCollection<LogEntry> collection = db.getCollection(
-                            DatabaseUtil.MONGO_CONFIG.getLogCollectionName(), LogEntry.class
+                            DatabaseUtil.DB_CONFIG.getTableName(), LogEntry.class
                     );
                     Collection<String> ids = VersionedLogEntryHelper.getLoggedSubjectsId(collection);
 
