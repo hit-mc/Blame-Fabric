@@ -1,7 +1,11 @@
 package com.keuin.blame.util;
 
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -12,7 +16,8 @@ public class TablePrinter {
 
     private Function<String, Integer> widthSupplier = (String::length);
 
-    private final int BORDER = 1;
+    private List<Formatting> colors = List.of(
+            Formatting.RED, Formatting.GOLD, Formatting.GREEN, Formatting.BLUE, Formatting.DARK_PURPLE);
 
     public TablePrinter(int columns) {
         this.columns = columns;
@@ -30,8 +35,12 @@ public class TablePrinter {
         return this;
     }
 
-    @Override
-    public String toString() {
+    private Formatting getColor(int i) {
+        return colors.get(i % colors.size());
+    }
+
+    public Text build() {
+        final String SEPARATOR = ".";
         var maxWidths = new int[columns];
         for (var r : rows) {
             for (int i = 0; i < r.row.length; i++) {
@@ -39,27 +48,30 @@ public class TablePrinter {
                 maxWidths[i] = Math.max(maxWidths[i], len);
             }
         }
-        var sb = new StringBuilder();
+        MutableText t = new LiteralText("");
         for (var r : rows) {
             var i = 0;
             for (String s : r.row) {
-                sb.append('|');
-                sb.append(' ');
-                sb.append(s);
+                t = t.append(new LiteralText(SEPARATOR + " "));
+
                 var n = maxWidths[i] - s.length();
                 if (n > 0) {
-                    sb.append(" ".repeat(n));
+                    t = t.append(" ".repeat(n / 2));
                 }
-                sb.append(' ');
+                t = t.append(new LiteralText(s).formatted(getColor(i)));
+                if (n > 0) {
+                    t = t.append(" ".repeat(n - n / 2));
+                }
+                t = t.append(" ");
                 i++;
             }
             if (r.row.length == 0) {
-                sb.append('|');
+                t = t.append(SEPARATOR);
             }
-            sb.append("|");
-            sb.append('\n');
+            t = t.append(SEPARATOR);
+            t = t.append("\n");
         }
-        return sb.toString();
+        return t;
     }
 
     public static class Row {

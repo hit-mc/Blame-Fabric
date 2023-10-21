@@ -82,6 +82,8 @@ public class BlameBlockCommand {
             timeRange *= amplifier;
             if (timeRange < 0)
                 return FAILED;
+            // convert to maximum unix millis
+            timeRange = System.currentTimeMillis() - timeRange * 1000L;
         }
 
         int amountLimit;
@@ -95,7 +97,7 @@ public class BlameBlockCommand {
             amountLimit = BlameLimitCommand.DEFAULT_LOOKUP_LIMIT;
         }
 
-        Blame.queryExecutor.byBlockPos(world, x, y, z, (msg) ->
+        Blame.queryExecutor.byBlockPos(world, x, y, z, timeRange, amountLimit, (msg) ->
                 context.getSource().sendFeedback(msg, false));
 
         return SUCCESS;
