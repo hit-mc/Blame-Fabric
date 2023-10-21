@@ -4,6 +4,7 @@ import com.clickhouse.client.ClickHouseParameterizedQuery;
 import com.clickhouse.data.ClickHouseFormat;
 import com.clickhouse.data.value.ClickHouseLongValue;
 import com.clickhouse.data.value.ClickHouseStringValue;
+import com.keuin.blame.data.enums.ActionType;
 import com.keuin.blame.util.DatabaseUtil;
 import com.keuin.blame.util.TablePrinter;
 import net.minecraft.text.LiteralText;
@@ -11,16 +12,21 @@ import net.minecraft.text.Text;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class QueryExecutor {
 
     private final Logger logger = LogManager.getLogger();
 
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
     public void byBlockPos(String world, long x, long y, long z, Consumer<Text> callback) {
         var server = DatabaseUtil.getServer();
         var stmt = ClickHouseParameterizedQuery.of(server.getConfig(),
-                "select subject_id, object_id, action_type, fromUnixTimestamp(toUInt64(ts/1000)) " +
+                "select subject_id, object_id, action_type, ts " +
                         "from :table where subject_world=:world and object_x=:x and object_y=:y and object_z=:z");
         try (var client = DatabaseUtil.getClient(server)) {
             var resp = client.read(server)
@@ -40,14 +46,15 @@ public class QueryExecutor {
             sb.append(String.format("Result for block at %s (%d, %d, %d):\n", world, x, y, z));
             final int columns = 4;
             var table = new TablePrinter(columns);
+            table.add(new TablePrinter.Row("Player", "Object", "Action", "Time"));
             for (var row : resp.records()) {
-                var rowStrings = new String[row.size()];
-                int i = 0;
-                for (var v : row) {
-                    rowStrings[i] = v.asString().replaceFirst("^minecraft:", "");
-                    i++;
-                }
-                table.add(new TablePrinter.Row(rowStrings));
+                var player = row.getValue("subject_id").asString();
+                var obj = row.getValue("object_id").asString().replaceFirst("^minecraft:", "");
+                var actionType = Optional.
+                        ofNullable(ActionType.parseInt(row.getValue("action_type").asInteger())).
+                        map(ActionType::toString).orElse("/");
+                var time = sdf.format(new Date(row.getValue("ts").asLong()));
+                table.add(new TablePrinter.Row(player, obj, actionType, time));
                 cnt++;
             }
             sb.append(table);
