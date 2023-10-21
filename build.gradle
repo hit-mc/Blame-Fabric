@@ -32,7 +32,8 @@ dependencies {
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.
 	implementation 'junit:junit:4.13.2'
-	modImplementation 'com.clickhouse:clickhouse-http-client:0.5.0'
+	modImplementation 'com.clickhouse:clickhouse-http-client:0.4.6'
+	modImplementation 'com.google.code.gson:gson:2.10.1' // 2.10 supports deserializing java record objects
 }
 
 processResources {

@@ -13,9 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.clickhouse.client.ClickHouseCredentials.fromUserAndPassword;
@@ -90,27 +88,43 @@ public class SubmitWorker {
     private void bulkWrite(
             List<LogEntry> buffer,
             ClickHouseRequest.Mutation req
-    ) throws IOException, ClickHouseException {
+    ) throws IOException, ClickHouseException, ExecutionException, InterruptedException {
+        if (buffer.isEmpty()) {
+            logger.error("bulkWrite is called with empty write buffer");
+            return;
+        }
+        logger.info("bulkWrite size: " + buffer.size());
+        CompletableFuture<ClickHouseResponse> fut;
         try (var os = ClickHouseDataStreamFactory.getInstance()
-                .createPipedOutputStream(req.getConfig(), (Runnable) null);
-             var resp = req.data(os.getInputStream()).executeAndWait()) {
+                .createPipedOutputStream(req.getConfig())) {
+            fut = req.data(os.getInputStream()).execute();
             for (var el : buffer) {
                 el.write(os);
             }
-            logger.info(String.format("Written %d log entries to ClickHouse. %s",
-                    buffer.size(), resp.getSummary().toString()));
+        }
+        try (var resp = fut.get()) {
+            var summary = resp.getSummary();
+            var expected = buffer.size();
+            var actual = summary.getReadRows();
+            logger.info("Write success: " + summary.toString());
+            if (expected != actual) {
+                logger.error(String.format(
+                        "Unexpected write rows, expected %d (buffer), actual %d (write summary)",
+                        expected, actual));
+            }
         }
         buffer.clear();
     }
 
     private void run() {
         var config = DatabaseUtil.DB_CONFIG;
+        logger.info("Database: " + config.toString());
         var server = ClickHouseNode.builder()
                 .host(config.address())
                 .port(ClickHouseProtocol.HTTP, config.port())
                 // .port(ClickHouseProtocol.GRPC, Integer.getInteger("chPort", 9100))
                 // .port(ClickHouseProtocol.TCP, Integer.getInteger("chPort", 9000))
-                .database(config.table())
+                .database(config.database())
                 .credentials(fromUserAndPassword(config.username(), config.password()))
                 .build();
 
@@ -121,7 +135,12 @@ public class SubmitWorker {
             try (var client = ClickHouseClient.newInstance(server.getProtocol())) {
                 writeLoop:
                 while (true) {
-                    var result = work(client, server, batchBuffer, writeImmediately);
+                    var req = client.read(server).write()
+                            .table(config.table())
+                            .format(ClickHouseFormat.RowBinary)
+//                            .option(ClickHouseClientOption.ASYNC, false)
+                            .option(ClickHouseClientOption.COMPRESS, false);
+                    var result = work(client, req, batchBuffer, writeImmediately);
                     switch (result) {
                         case CONTINUE -> {
                             writeImmediately = false;
@@ -132,6 +151,9 @@ public class SubmitWorker {
                         }
                         case FINISH -> {
                             break workLoop;
+                        }
+                        case INSTANT_WRITE -> {
+                            writeImmediately = true;
                         }
                     }
                 }
@@ -148,12 +170,10 @@ public class SubmitWorker {
 
     private @NotNull WorkResult work(
             ClickHouseClient client,
-            ClickHouseNode server,
+            ClickHouseRequest.Mutation req,
             List<LogEntry> buffer,
             boolean writeImmediately
     ) {
-        var req = client.write(server).format(ClickHouseFormat.RowBinary)
-                .option(ClickHouseClientOption.ASYNC, false);
         boolean interrupted = false;
         // if writeImmediately is set, do not accumulate the buffer, flush it immediately
         try {
@@ -177,13 +197,15 @@ public class SubmitWorker {
                 return WorkResult.FINISH;
             }
             return WorkResult.RECONNECT;
-        } catch (ClickHouseException ex) {
+        } catch (ClickHouseException | ExecutionException ex) {
             logger.error("ClickHouse writer error", ex);
             try {
                 Thread.sleep(3000);
             } catch (InterruptedException ignored) {
             }
             return WorkResult.RECONNECT;
+        } catch (InterruptedException e) {
+            return WorkResult.INSTANT_WRITE;
         }
         return WorkResult.CONTINUE;
     }

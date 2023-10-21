@@ -10,7 +10,6 @@ import com.keuin.blame.util.UuidUtils;
 import net.minecraft.MinecraftVersion;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -148,49 +147,34 @@ public class LogEntry {
     }
 
     public void write(ClickHousePipedOutputStream os) throws IOException {
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeInt8(os, actionType.getValue());
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeFixedString(os, gameVersion, 8);
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeString(os, objectId);
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeFixedString(os, objectPos.getWorld(), 24);
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeInt64(os, (long) (objectPos.getX()));
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeInt64(os, (long) (objectPos.getY()));
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeInt64(os, (long) (objectPos.getZ()));
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeInt32(os, objectType.getValue());
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeString(os, subjectId);
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeFixedString(os, subjectPos.getWorld(), 24);
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeFloat64(os, subjectPos.getX());
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeFloat64(os, subjectPos.getY());
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeFloat64(os, subjectPos.getZ());
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeFixedString(os, subjectUUID.toString(), 36); // lowercase
 
-        BinaryStreamUtils.writeNonNull(os);
         BinaryStreamUtils.writeInt64(os, timeMillis);
     }
 }

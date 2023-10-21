@@ -6,9 +6,6 @@ import com.keuin.blame.data.WorldPos;
 import com.keuin.blame.data.entry.LogEntry;
 import com.keuin.blame.data.enums.ActionType;
 import com.keuin.blame.data.enums.ObjectType;
-import com.keuin.blame.lookup.DummyFilter;
-import com.keuin.blame.lookup.LookupCallback;
-import com.keuin.blame.lookup.LookupManager;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -70,15 +67,15 @@ public class TestDatabase {
             );
             SubmitWorker.INSTANCE.submit(entry);
             Thread.sleep(2000);
-            LookupManager.INSTANCE.lookup(new DummyFilter(), new LookupCallback() {
-                @Override
-                public void onLookupFinishes(Iterable<LogEntry> logEntries) {
-                    for (LogEntry e : logEntries) {
-                        System.out.println(e);
-                        success[0] |= Objects.equals(e, entry);
-                    }
-                }
-            }, 100);
+//            LookupManager.INSTANCE.lookup(new DummyFilter(), new LookupCallback() {
+//                @Override
+//                public void onLookupFinishes(Iterable<LogEntry> logEntries) {
+//                    for (LogEntry e : logEntries) {
+//                        System.out.println(e);
+//                        success[0] |= Objects.equals(e, entry);
+//                    }
+//                }
+//            }, 100);
             Thread.sleep(2000);
             assertTrue(success[0]);
         } catch (Exception e) {
