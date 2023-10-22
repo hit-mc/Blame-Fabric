@@ -150,6 +150,9 @@ public class SubmitWorker {
                     var result = work(client, req, batchBuffer, writeImmediately);
                     switch (result) {
                         case CONTINUE -> {
+                            if (isStopped.get()) {
+                                return;
+                            }
                             writeImmediately = false;
                         }
                         case RECONNECT -> {
