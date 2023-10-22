@@ -63,6 +63,12 @@ public class LogEntry {
 
     public WorldPos objectPos = WorldPos.NULL_POS;
 
+    /**
+     * 2: the last version of Blame 1.x (last version written natively in MongoDB)
+     * 3: the first version of Blame 2.x (ClickHouse)
+     */
+    public final int dataVersion = 3;
+
     public LogEntry() {
     }
 
@@ -176,5 +182,7 @@ public class LogEntry {
         BinaryStreamUtils.writeFixedString(os, subjectUUID.toString(), 36); // lowercase
 
         BinaryStreamUtils.writeInt64(os, timeMillis);
+
+        BinaryStreamUtils.writeUnsignedInt16(os, dataVersion);
     }
 }
