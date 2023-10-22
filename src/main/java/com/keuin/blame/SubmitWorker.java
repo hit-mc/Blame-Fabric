@@ -59,9 +59,13 @@ public class SubmitWorker {
      * @throws InterruptedException The buffer may be empty or non-empty.
      */
     private void accumulateBuffer(List<LogEntry> buffer) throws InterruptedException {
+        long accumulateStart = -1;
         while (true) {
-            if (buffer.size() >= batchSize) {
-                // buffer is full, flush it
+            if (
+                    buffer.size() >= batchSize ||
+                            (accumulateStart > 0 && System.currentTimeMillis() - accumulateStart > maxWaitMillis)
+            ) {
+                // buffer is full, or max accumulate time reached, flush it
                 break;
             }
             var el = queue.poll();
@@ -79,6 +83,9 @@ public class SubmitWorker {
                 break;
             }
             buffer.add(el);
+            if (accumulateStart < 0) {
+                accumulateStart = System.currentTimeMillis();
+            }
         }
     }
 
