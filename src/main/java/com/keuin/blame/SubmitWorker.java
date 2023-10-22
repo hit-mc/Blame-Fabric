@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class SubmitWorker {
 
     public static final SubmitWorker INSTANCE = new SubmitWorker();
-    private final Logger logger = LogManager.getLogger();
+    private final Logger logger = LogManager.getLogger(SubmitWorker.class);
     private final BlockingQueue<LogEntry> queue = new ArrayBlockingQueue<>(1048576);
     private final Thread thread = new Thread(SubmitWorker.this::run);
     private final AtomicBoolean isStopped = new AtomicBoolean(false);
@@ -33,6 +33,7 @@ public class SubmitWorker {
     private SubmitWorker() {
         thread.setUncaughtExceptionHandler((t, e) ->
                 logger.error(String.format("Exception in thread %s: %s", t.getName(), e)));
+        thread.setName(SubmitWorker.class.getSimpleName());
         thread.start();
     }
 
@@ -117,6 +118,15 @@ public class SubmitWorker {
     }
 
     private void run() {
+        try {
+            logger.info("ClickHouse writer thread started.");
+            doRun();
+        } finally {
+            logger.info("ClickHouse writer thread stopped.");
+        }
+    }
+
+    private void doRun() {
         var server = DatabaseUtil.getServer();
         var batchBuffer = new ArrayList<LogEntry>(batchSize);
         boolean writeImmediately = false;
@@ -126,7 +136,7 @@ public class SubmitWorker {
                 writeLoop:
                 while (true) {
                     var req = client.read(server).write()
-                            .table(DatabaseUtil.DB_CONFIG.table())
+                            .table(DatabaseUtil.DB_CONFIG.getTable())
                             .format(ClickHouseFormat.RowBinary)
 //                            .option(ClickHouseClientOption.ASYNC, false)
                             ;
@@ -137,6 +147,7 @@ public class SubmitWorker {
                         }
                         case RECONNECT -> {
                             writeImmediately = true;
+                            logger.info("Reconnecting to ClickHouse...");
                             break writeLoop;
                         }
                         case FINISH -> {

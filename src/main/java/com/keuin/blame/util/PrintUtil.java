@@ -31,7 +31,7 @@ public final class PrintUtil implements ServerLifecycleEvents.ServerStarted {
     private static final Style warnStyle = Style.EMPTY.withColor(Formatting.YELLOW);
     private static final Style errorStyle = Style.EMPTY.withColor(Formatting.DARK_RED);
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger(PrintUtil.class);
     private static final String LOG_HEADING = "[Blame]";
     private static PlayerManager playerManager = null;
 

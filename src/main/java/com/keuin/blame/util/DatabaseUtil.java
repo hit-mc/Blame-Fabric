@@ -16,12 +16,12 @@ public class DatabaseUtil {
     public static ClickHouseNode getServer() {
         final var config = DatabaseUtil.DB_CONFIG;
         return ClickHouseNode.builder()
-                .host(config.address())
-                .port(ClickHouseProtocol.HTTP, config.port())
+                .host(config.getAddress())
+                .port(ClickHouseProtocol.HTTP, config.getPort())
                 // .port(ClickHouseProtocol.GRPC, Integer.getInteger("chPort", 9100))
                 // .port(ClickHouseProtocol.TCP, Integer.getInteger("chPort", 9000))
-                .database(config.database())
-                .credentials(fromUserAndPassword(config.username(), config.password()))
+                .database(config.getDatabase())
+                .credentials(fromUserAndPassword(config.getUsername(), config.getPassword()))
                 .addOption(ClickHouseClientOption.COMPRESS.getKey(), "false")
                 .build();
     }

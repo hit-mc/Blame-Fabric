@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 public class QueryExecutor {
 
-    private final Logger logger = LogManager.getLogger();
+    private final Logger logger = LogManager.getLogger(QueryExecutor.class);
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -30,7 +30,7 @@ public class QueryExecutor {
         // ClickHouse driver's parameterized SQL generator is a piece of shit.
         // I won't use that. Use string interpolation instead.
         var sql = "select subject_id, object_id, action_type, ts";
-        sql += " from " + escape(DatabaseUtil.DB_CONFIG.table());
+        sql += " from " + escape(DatabaseUtil.DB_CONFIG.getTable());
         sql += " where subject_world=%s and object_x=%d and object_y=%d and object_z=%d".formatted(
                 escape(world), x, y, z
         );
