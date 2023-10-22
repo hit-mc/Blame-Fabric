@@ -37,6 +37,7 @@ public class QueryExecutor {
         if (timeRange > 0) {
             sql += " and ts>=" + timeRange;
         }
+        sql += " order by ts desc";
         if (maxCount > 0) {
             sql += " limit " + maxCount;
         }
