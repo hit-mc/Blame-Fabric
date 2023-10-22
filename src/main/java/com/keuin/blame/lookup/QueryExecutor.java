@@ -30,7 +30,7 @@ public class QueryExecutor {
         // ClickHouse driver's parameterized SQL generator is a piece of shit.
         // I won't use that. Use string interpolation instead.
         var sql = "select subject_id, object_id, action_type, ts";
-        sql += " from " + escape(DatabaseUtil.DB_CONFIG.getTable());
+        sql += " from " + escapeIdentifier(DatabaseUtil.DB_CONFIG.getTable());
         sql += " where subject_world=%s and object_x=%d and object_y=%d and object_z=%d".formatted(
                 escape(world), x, y, z
         );
@@ -45,6 +45,10 @@ public class QueryExecutor {
 
     private static String escape(String s) {
         return "'" + s.replace("\\", "\\\\").replace("'", "\\'") + "'";
+    }
+
+    private static String escapeIdentifier(String s) {
+        return "\"" + s.replace("\\", "\\\\").replace("\"", "\"\"") + "\"";
     }
 
     public void byBlockPos(
