@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SubmitWorker {
 
@@ -28,6 +29,28 @@ public class SubmitWorker {
 
     private static final int batchSize = 1024;
     private static final int maxWaitMillis = 3000;
+
+    private static final int idleMaxWaitMillis = 600 * 1000;
+
+    private final AtomicInteger playerCounter = new AtomicInteger();
+    private final AtomicBoolean isPlayerPresent = new AtomicBoolean(false);
+
+    private final AtomicBoolean playerJoin = new AtomicBoolean(false);
+
+    public void playerJoin() {
+        if (isStopped.get()) return;
+        playerCounter.incrementAndGet();
+        playerJoin.set(true);
+        isPlayerPresent.set(true);
+        thread.interrupt(); // interrupt if sleeping
+    }
+
+    public void playerQuit() {
+        var cnt = playerCounter.decrementAndGet();
+        if (cnt == 0) {
+            isPlayerPresent.set(false);
+        }
+    }
 
 
     private SubmitWorker() {
@@ -53,6 +76,10 @@ public class SubmitWorker {
         thread.interrupt();
     }
 
+    private long getSleepDuration() {
+        return isPlayerPresent.get() ? maxWaitMillis : idleMaxWaitMillis;
+    }
+
     /**
      * Ensures the buffer is ready to consume from.
      *
@@ -63,7 +90,7 @@ public class SubmitWorker {
         while (true) {
             if (
                     buffer.size() >= batchSize ||
-                            (accumulateStart > 0 && System.currentTimeMillis() - accumulateStart > maxWaitMillis)
+                            (accumulateStart > 0 && System.currentTimeMillis() - accumulateStart > getSleepDuration())
             ) {
                 // buffer is full, or max accumulate time reached, flush it
                 break;
@@ -75,7 +102,9 @@ public class SubmitWorker {
                     el = queue.take();
                 } else {
                     // try to read more entries with timeout
-                    el = queue.poll(maxWaitMillis, TimeUnit.MILLISECONDS);
+                    var duration = getSleepDuration();
+                    logger.info("Sleep duration: " + duration);
+                    el = queue.poll(duration, TimeUnit.MILLISECONDS);
                 }
             }
             if (el == null) {
@@ -193,10 +222,14 @@ public class SubmitWorker {
                 accumulateBuffer(buffer);
             }
         } catch (InterruptedException ignored) {
-            // server is closing, flush the buffer immediately
-            // decline new write requests
-            isStopped.set(true);
-            interrupted = true;
+            // check if the interruption is triggered by player join
+            // in this case, we don't stop, but try to write the buffer immediately
+            if (!playerJoin.getAndSet(false)) {
+                // server is closing, flush the buffer immediately
+                // decline new write requests
+                isStopped.set(true);
+                interrupted = true;
+            }
         }
         try {
             bulkWrite(buffer, req);

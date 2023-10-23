@@ -17,11 +17,13 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.player.*;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.command.argument.DimensionArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,6 +82,19 @@ public class Blame implements ModInitializer {
 
             logger.info("Stopping SubmitWorker...");
             SubmitWorker.INSTANCE.stop();
+        });
+
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            // does not take carpet fake players into account
+            var isNormalPlayer = handler.player.getClass() == ServerPlayerEntity.class;
+            if (!isNormalPlayer) return;
+            SubmitWorker.INSTANCE.playerJoin();
+        });
+
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            var isNormalPlayer = handler.player.getClass() == ServerPlayerEntity.class;
+            if (!isNormalPlayer) return;
+            SubmitWorker.INSTANCE.playerQuit();
         });
 
         // hook game events
